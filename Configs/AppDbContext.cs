@@ -1,0 +1,31 @@
+﻿using Microsoft.EntityFrameworkCore; 
+using AttendanceManagementApp.Models;
+
+namespace AttendanceManagementApp.Configs
+{
+    public class AppDbContext: DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<Contract> Contracts { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<EmployeeReward> EmployeesRewards { get; set; }
+        public DbSet<EmployeeShift> EmployeeShifts { get; set; }
+        public DbSet<Holiday> Holidays { get; set; }
+        public DbSet<LeaveType> LeaveTypes { get; set; }
+        public DbSet<Position> Positions { get; set; }
+        public DbSet<Shift> Shifts { get; set; }
+        public DbSet<OverTime> OverTimes { get; set; }
+        public DbSet<Payroll> Payrolls { get; set; }
+        public DbSet<PayrollDetail> PayrollDetails { get; set; }
+        public DbSet<RewardType> RewardTypes { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<User> Users { get; set; }
+
+
+    }
+}
