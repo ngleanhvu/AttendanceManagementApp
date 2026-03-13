@@ -17,13 +17,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Data\" />
     <Folder Include="Middlewares\" />
     <Folder Include="DTOs\" />
+    <Folder Include="Mappings\" />
     <Folder Include="Utils\" />
-    <Folder Include="Repositories\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
