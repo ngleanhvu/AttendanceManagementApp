@@ -79,6 +79,8 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 throw new NotFoundException("Position not found.");
             }
+            position.Name = positionCreateReq.Name;
+            position.Description = positionCreateReq.description;
             _repo.Update(position);
             await _repo.SaveAsync();
             return _positionMapping.ToPositionRes(position);
