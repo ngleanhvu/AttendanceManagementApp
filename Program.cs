@@ -21,11 +21,13 @@ builder.Services.AddControllers();
 // Add mapping
 builder.Services.AddScoped<DepartmentMapping>();
 builder.Services.AddScoped<PositionMapping>();
+builder.Services.AddScoped<EmployeeMapping>();
 // Add repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 // Add services
 
 var app = builder.Build();

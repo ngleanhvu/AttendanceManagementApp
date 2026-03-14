@@ -26,6 +26,15 @@ namespace AttendanceManagementApp.Configs
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.EmployeeDetail)
+                .WithOne(d => d.Employee)
+                .HasForeignKey<EmployeeDetail>(d => d.EmployeeId);
+        }
 
     }
 }

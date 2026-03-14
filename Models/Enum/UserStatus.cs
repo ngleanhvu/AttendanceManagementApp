@@ -8,5 +8,6 @@
         FIRED = 4,
         SUSPENDED = 5,
         PROBATION = 6,
+
     }
 }

@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations;
 namespace AttendanceManagementApp.Models
 {
     [Index(nameof(Code), IsUnique = true)]
-    [Index(nameof(Phone), IsUnique =true)]
     public class Employee: BaseEntity
     {
         [Required]
@@ -18,28 +17,16 @@ namespace AttendanceManagementApp.Models
         [Required]
         public bool Gender { get; set; }
 
-        [Required]
-        public DateTime DateOfBirth { get; set; }
-
-        [Required]
-        [StringLength(10)]
-        public string Phone { get; set; }
-
         [EmailAddress]
         [Required]
         public string Email { get; set; }
 
         [Required]
-        public string Address { get; set; }
+        public string Thumbnail { get; set; }
 
-        [Required]
-        public DateTime HireDate { get; set; }
+        public EmployeeDetail EmployeeDetail { get; set; }
 
         public UserStatus UserStatus { get; set; }
-
-        public Department Department { get; set; }
-
-        public Position Position { get; set; }
 
         public ICollection<Contract> Contracts { get; set; }
 

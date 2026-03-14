@@ -10,6 +10,6 @@ namespace AttendanceManagementApp.Models
 
         public string Description { get; set; }
 
-        public ICollection<Employee> Employees { get; set; }
+        public ICollection<EmployeeDetail> EmployeeDetails { get; set; }
     }
 }
