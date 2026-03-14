@@ -6,6 +6,7 @@ namespace AttendanceManagementApp.DTOs.Request
     {
         [Required(ErrorMessage = "Department name is required.")]
         public string Name { get; set; }
+        [Required(ErrorMessage = "Department description is required.")]
         public string Description { get; set; }
     }
 }

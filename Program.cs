@@ -20,10 +20,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 // Add mapping
 builder.Services.AddScoped<DepartmentMapping>();
+builder.Services.AddScoped<PositionMapping>();
 // Add repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IPositionService, PositionService>();
 // Add services
 
 var app = builder.Build();
