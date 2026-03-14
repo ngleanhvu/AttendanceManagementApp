@@ -7,23 +7,35 @@ namespace AttendanceManagementApp.Utils
         public static IQueryable<T> ApplySearch<T>(
             this IQueryable<T> query,
             string search,
-            Expression<Func<T, string>> field)
+            params Expression<Func<T, string>>[] fields)
         {
-            if (string.IsNullOrWhiteSpace(search))
+            if (string.IsNullOrWhiteSpace(search) || fields.Length == 0)
                 return query;
 
-            var parameter = field.Parameters[0];
+            var parameter = Expression.Parameter(typeof(T), "x");
 
-            var body = Expression.Call(
-                field.Body,
-                typeof(string).GetMethod("Contains", new[] { typeof(string) }),
-                Expression.Constant(search)
-            );
+            Expression body = null;
+
+            foreach (var field in fields)
+            {
+                var member = Expression.Invoke(field, parameter);
+
+                var contains = Expression.Call(
+                    member,
+                    typeof(string).GetMethod(nameof(string.Contains), new[] { typeof(string) }),
+                    Expression.Constant(search)
+                );
+
+                body = body == null
+                    ? contains
+                    : Expression.OrElse(body, contains);
+            }
 
             var predicate = Expression.Lambda<Func<T, bool>>(body, parameter);
 
             return query.Where(predicate);
         }
+    
 
         public static IQueryable<T> ApplyPagination<T>(
             this IQueryable<T> query,
