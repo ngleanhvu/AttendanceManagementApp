@@ -9,6 +9,7 @@ namespace AttendanceManagementApp.Mappings
             if (department == null) return null;
             return new DepartmentRes
             {
+                Id = department.Id,
                 Name = department.Name,
                 Description = department.Description
             };

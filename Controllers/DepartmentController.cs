@@ -24,5 +24,26 @@ namespace AttendanceManagementApp.Controllers
 
             return Ok(new ApiResponse<DepartmentRes>(result));
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] DepartmentCreateReq req)
+        {
+            var result = await _departmentService.UpdateDepartmentAsync(id, req);
+            return Ok(new ApiResponse<DepartmentRes>(result));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _departmentService.SoftDeleteDepartmentAsync(id);
+            return Ok(new ApiResponse<string>("Department deleted successfully"));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        {
+            var result = await _departmentService.GetDepartmentsAsync(query);
+            return Ok(new ApiResponse<PagedResult<DepartmentRes>>(result));
+        }
     }
 }
