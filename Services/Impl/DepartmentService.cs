@@ -40,6 +40,16 @@ namespace AttendanceManagementApp.Services.Impl
             return _departmentMapping.ToDepartmentRes(department);
         }
 
+        public async Task<Department> GetDepartmentAsync(int id)
+        {
+            var department = _repo.GetByIdAsync(id).Result;
+            if (department == null)
+            {
+                throw new NotFoundException("Department with not found.");
+            }
+            return department;
+        }
+
         public async Task<PagedResult<DepartmentRes>> GetDepartmentsAsync(PaginationQuery query)
         {
             var queryable = _context.Departments

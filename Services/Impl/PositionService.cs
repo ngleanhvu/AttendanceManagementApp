@@ -36,6 +36,16 @@ namespace AttendanceManagementApp.Services.Impl
             return _positionMapping.ToPositionRes(position);
         }
 
+        public async Task<Position> GetPositionAsync(int id)
+        {
+            var position = _repo.GetByIdAsync(id).Result;
+            if (position == null)
+            {
+                throw new NotFoundException("Position not found.");
+            }
+            return position;
+        }
+
         public async Task<PagedResult<PositionRes>> GetPositionsAsync(PaginationQuery query)
         {
             var queryable = _context.Positions

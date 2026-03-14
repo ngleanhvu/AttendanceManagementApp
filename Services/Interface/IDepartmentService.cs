@@ -1,5 +1,6 @@
 ﻿using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Utils;
 
 namespace AttendanceManagementApp.Services.Interface
@@ -10,5 +11,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<DepartmentRes> CreateDepartmentAsync(DepartmentCreateReq req);
         Task<DepartmentRes> UpdateDepartmentAsync(int id, DepartmentCreateReq req);
         Task<DepartmentRes> SoftDeleteDepartmentAsync(int id);
+        Task<Department> GetDepartmentAsync(int id);
     }
 }

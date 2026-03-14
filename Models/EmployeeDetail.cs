@@ -6,10 +6,8 @@ namespace AttendanceManagementApp.Models
 {
     [Index(nameof(Phone), IsUnique = true)]
     [Index(nameof(IdentityNumber), IsUnique = true)]
-    public class EmployeeDetail
+    public class EmployeeDetail: BaseEntity
     {
-        [Key]
-        public int Id { get; set; }
 
         public DateOnly DateOfBirth { get; set; }
 

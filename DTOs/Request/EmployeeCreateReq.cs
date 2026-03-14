@@ -11,7 +11,7 @@ namespace AttendanceManagementApp.DTOs.Request
         [Required(ErrorMessage = "Email is required")]
         public string Email { get; set; }
         [Required(ErrorMessage = "Thumbnail is required")]
-        public MultipartFormDataContent Thumbnail { get; set; }
+        public IFormFile Thumbnail { get; set; }
         [Required(ErrorMessage = "Date of Birth is required")]
         public DateOnly DateOfBirth { get; set; }
         [Required(ErrorMessage = "Identity Number is required")]

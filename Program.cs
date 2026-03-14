@@ -8,36 +8,43 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
+builder.Services.AddControllers();
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// OpenAPI
 builder.Services.AddOpenApi();
-// Add DbContext
+
+// DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Add controller
-builder.Services.AddControllers();
-// Add mapping
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+);
+
+// Mapping
 builder.Services.AddScoped<DepartmentMapping>();
 builder.Services.AddScoped<PositionMapping>();
 builder.Services.AddScoped<EmployeeMapping>();
-// Add repositories
+
+// Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
+// Services
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
-// Add services
+
+// Cloudinary config
+builder.Services.Configure<CloudinaryConfig>(
+    builder.Configuration.GetSection("Cloudinary")
+);
+
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
 var app = builder.Build();
-// Add global exception handling middleware
+
+// Global Exception Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
-
-app.MapControllers();
-
-// Configure the HTTP request pipeline.
+// OpenAPI
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
