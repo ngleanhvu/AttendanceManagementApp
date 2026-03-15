@@ -23,6 +23,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<DepartmentMapping>();
 builder.Services.AddScoped<PositionMapping>();
 builder.Services.AddScoped<EmployeeMapping>();
+builder.Services.AddScoped<ContractMapping>();
+builder.Services.AddScoped<ShiftMapping>();
 
 // Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -31,6 +33,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IPositionService, PositionService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IContractService, ContractService>();
+builder.Services.AddScoped<IShiftService, ShiftService>();
 
 // Cloudinary config
 builder.Services.Configure<CloudinaryConfig>(

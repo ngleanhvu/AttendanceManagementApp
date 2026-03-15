@@ -23,7 +23,6 @@ namespace AttendanceManagementApp.Models
 
         [Required]
         public string Thumbnail { get; set; }
-
         public EmployeeDetail EmployeeDetail { get; set; }
 
         public UserStatus UserStatus { get; set; }

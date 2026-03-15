@@ -57,7 +57,7 @@ namespace AttendanceManagementApp.Utils
 
             var param = Expression.Parameter(typeof(T), "x");
 
-            var property = Expression.Property(param, sortBy);
+            var property = Expression.PropertyOrField(param, sortBy);
 
             var lambda = Expression.Lambda(property, param);
 

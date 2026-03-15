@@ -1,5 +1,6 @@
 ﻿using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Utils;
 
 namespace AttendanceManagementApp.Services.Interface
@@ -11,5 +12,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<PagedResult<EmployeeRes>> GetEmployeesAsync(PaginationQuery query);
         Task<EmployeeDetailRes> GetEmployeeAsync(int id);
         Task<EmployeeRes> SoftDeleteEmployeeAsync(int id);
+        Task<Employee> GetEmployeeByIdAsync(int id);
     }
 }

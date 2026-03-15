@@ -198,5 +198,13 @@ namespace AttendanceManagementApp.Services.Impl
             // 5. Return response
             return _employeeMapping.ToEmployeeDetailRes(employee);
         }
+
+        public async Task<Employee> GetEmployeeByIdAsync(int id)
+        {
+            var employee = _context.Employees.FirstOrDefault(x => x.Id == id);
+            if (employee == null)
+                throw new NotFoundException("Employee not found");
+            return employee;
+        }
     }
 }

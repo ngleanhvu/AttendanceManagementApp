@@ -1,25 +1,23 @@
-﻿
+﻿using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Models.Enum;
 using System.ComponentModel.DataAnnotations;
-namespace AttendanceManagementApp.Models
+
+namespace AttendanceManagementApp.DTOs.Response
 {
-    public class Contract : BaseEntity
+    public class ContractRes
     {
-        [Required]
+        public int Id { get; set; }
         public string ContractNumber { get; set; }
-        [Required]
         public ContractType ContractType { get; set; }
-        [Required]
         public DateOnly StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public decimal BaseSalary { get; set; }
         public decimal? Allowance { get; set; }
         public decimal? InsuranceSalary { get; set; }
-        public ContractStatus ContractStatus { get; set; }
+        public ContractStatus Status { get; set; }
         public string? Description { get; set; }
         public string? SignedBy { get; set; }
         public DateOnly? SignedDate { get; set; }
-        public int EmployeeId { get; set; }
-        public Employee Employee { get; set; }
+        public EmployeeRes Employee { get; set; }
     }
 }
