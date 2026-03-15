@@ -54,4 +54,5 @@ namespace AttendanceManagementApp.Controllers
             var contracts = await _contractService.GetContractsByEmployeeIdAsync(employeeId, query);
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
         }
+    }
 }
