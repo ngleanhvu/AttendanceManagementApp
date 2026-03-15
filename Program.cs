@@ -25,6 +25,7 @@ builder.Services.AddScoped<PositionMapping>();
 builder.Services.AddScoped<EmployeeMapping>();
 builder.Services.AddScoped<ContractMapping>();
 builder.Services.AddScoped<ShiftMapping>();
+builder.Services.AddScoped<EmployeeShiftMapping>();
 
 // Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -35,6 +36,7 @@ builder.Services.AddScoped<IPositionService, PositionService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IContractService, ContractService>();
 builder.Services.AddScoped<IShiftService, ShiftService>();
+builder.Services.AddScoped<IEmployeeShiftService, EmployeeShiftService>();
 
 // Cloudinary config
 builder.Services.Configure<CloudinaryConfig>(

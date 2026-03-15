@@ -1,5 +1,6 @@
 ﻿using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Utils;
 
 namespace AttendanceManagementApp.Services.Interface
@@ -11,5 +12,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<ShiftRes> UpdateShiftAsync(int id, ShiftCreateReq req);
         Task<ShiftRes> DeleteShiftAsync(int id);
         Task<ShiftRes> GetShiftAsync(int id);
+        Task<Shift> GetShiftByIdAsync(int id);
     }
 }

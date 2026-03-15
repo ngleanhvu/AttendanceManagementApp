@@ -68,6 +68,14 @@ namespace AttendanceManagementApp.Services.Impl
             return Task.FromResult(_shiftMapping.ToShiftRes(shift));
         }
 
+        public async Task<Shift> GetShiftByIdAsync(int id)
+        {
+            var shift = await _shiftRepository.GetByIdAsync(id);
+            if (shift == null)
+                throw new NotFoundException("Shift not found.");
+            return shift;
+        }
+
         public async Task<PagedResult<ShiftRes>> GetShiftsAsync(PaginationQuery query)
         {
             var pageble = _context.Shifts
