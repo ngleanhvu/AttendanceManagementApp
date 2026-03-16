@@ -2,6 +2,11 @@
 
 namespace AttendanceManagementApp.Models
 {
+    public enum AttendanceStatus
+    {
+        PRSENT = 1,
+        LATE = 2
+    }
     public class Attendance : BaseEntity
     {
         public DateOnly WorkDate { get; set; }
@@ -9,19 +14,11 @@ namespace AttendanceManagementApp.Models
         public DateTime? CheckIn { get; set; }
 
         public DateTime? CheckOut { get; set; }
-
-        public AttendanceStatus Status { get; set; }
-
+        public AttendanceStatus AttendanceStatus { get; set; }
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
-
         public int ShiftId { get; set; }
         public Shift Shift { get; set; }
-
-        public int LateMinutes { get; set; }
-
-        public int EarlyLeaveMinutes { get; set; }
-
         public string Note { get; set; }
     }
 }
