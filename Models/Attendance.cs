@@ -15,7 +15,7 @@ namespace AttendanceManagementApp.Models
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
 
-        public int ShiftId { get; set; }
+        
         public Shift Shift { get; set; }
 
         public int LateMinutes { get; set; }
