@@ -11,7 +11,5 @@
         public DateTime CreatedDate { get; set; }
 
         public Employee Employee { get; set; }
-
-        public LeaveType LeaveType { get; set; }
     }
 }

@@ -5,22 +5,15 @@ namespace AttendanceManagementApp.Mappings
 {
     public class EmployeeShiftMapping
     {
+        private readonly EmployeeMapping _employeeMapping;
         public EmployeeShiftRes ToEmployeeShiftRes(EmployeeShift employeeShift)
         {
             if (employeeShift == null) return null;
+            Employee employee = employeeShift.Employee;
             return new EmployeeShiftRes
             {
                 Id = employeeShift.Id,
-                Employee = new EmployeeRes
-                {
-                    Id = employeeShift.Employee.Id,
-                    Code = employeeShift.Employee.Code,
-                    Fullname = employeeShift.Employee.Fullname,
-                    Email = employeeShift.Employee.Email,
-                    Thumbnail = employeeShift.Employee.Thumbnail,
-                    Gender = employeeShift.Employee.Gender,
-                    UserStatus = employeeShift.Employee.UserStatus,
-                },
+                Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,
                 FromDate = employeeShift.FromDate,
                 ToDate = employeeShift.ToDate,
                 Note = employeeShift.Note,

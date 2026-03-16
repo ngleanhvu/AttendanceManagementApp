@@ -18,6 +18,6 @@ namespace AttendanceManagementApp.DTOs.Response
         public string? Description { get; set; }
         public string? SignedBy { get; set; }
         public DateOnly? SignedDate { get; set; }
-        public EmployeeRes Employee { get; set; }
+        public EmployeeRes? Employee { get; set; }
     }
 }

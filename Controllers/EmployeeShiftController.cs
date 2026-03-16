@@ -47,9 +47,12 @@ namespace AttendanceManagementApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        public async Task<IActionResult> GetAll(
+                [FromQuery] PaginationQuery query,
+                [FromQuery] EmployeeShiftFilter filter)
         {
-            var result = await _employeeShiftService.GetEmployeeShiftsAsync(query);
+            var result = await _employeeShiftService.GetEmployeeShiftsAsync(query, filter);
+
             return Ok(new ApiResponse<List<EmployeeShiftRes>>(result));
         }
     }

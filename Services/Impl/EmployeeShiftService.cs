@@ -66,19 +66,49 @@ namespace AttendanceManagementApp.Services.Impl
             return _employeeShiftMapping.ToEmployeeShiftRes(employeeShift);
         }
 
-        public async Task<List<EmployeeShiftRes>> GetEmployeeShiftsAsync(PaginationQuery query)
+        public async Task<List<EmployeeShiftRes>> GetEmployeeShiftsAsync(
+                 PaginationQuery query,
+                 EmployeeShiftFilter filter)
         {
-            var pageble = _appDbContext.EmployeeShifts
+            var queryable = _appDbContext.EmployeeShifts
                 .AsNoTracking()
-                .Where(x => x.FromDate <= DateOnly.FromDateTime(DateTime.Now) 
-                        && x.ToDate >= DateOnly.FromDateTime(DateTime.Now)
-                        || x.Employee.Id.ToString().Equals(query.Search)
-                )
-                .ApplyPagination(query.Page, query.PageSize);
+                .AsQueryable();
 
-            var count = await pageble.CountAsync();
+            if (filter.EmployeeId.HasValue)
+            {
+                queryable = queryable.Where(x => x.EmployeeId == filter.EmployeeId);
+            }
 
-            var items = await pageble.Select(x => _employeeShiftMapping.ToEmployeeShiftRes(x)).ToListAsync();
+            if (filter.Month.HasValue)
+            {
+                queryable = queryable.Where(x => x.FromDate.Month == filter.Month);
+            }
+
+            if (filter.Day.HasValue)
+            {
+                queryable = queryable.Where(x => x.FromDate.Day == filter.Day);
+            }
+
+            if (filter.Year.HasValue)
+            {
+                queryable = queryable.Where(x => x.FromDate.Year == filter.Year);
+            }
+
+            if (filter.FromDate.HasValue)
+            {
+                queryable = queryable.Where(x => x.FromDate >= filter.FromDate);
+            }
+
+            if (filter.ToDate.HasValue)
+            {
+                queryable = queryable.Where(x => x.ToDate <= filter.ToDate);
+            }
+
+            var pageable = queryable.ApplyPagination(query.Page, query.PageSize);
+
+            var items = await pageable
+                .Select(x => _employeeShiftMapping.ToEmployeeShiftRes(x))
+                .ToListAsync();
 
             return items;
         }

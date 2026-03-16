@@ -9,7 +9,7 @@ namespace AttendanceManagementApp.Services.Interface
         Task CreateEmployeeShiftAsync(EmployeeShiftCreateReq req);
         Task<EmployeeShiftRes> UpdateEmploymentsAsync(int id, EmployeeShiftUpdateReq req);
         Task<EmployeeShiftRes> GetEmployeeShiftAsync(int id);
-        Task<List<EmployeeShiftRes>> GetEmployeeShiftsAsync(PaginationQuery query);
+        Task<List<EmployeeShiftRes>> GetEmployeeShiftsAsync(PaginationQuery query, EmployeeShiftFilter filter);
         Task<EmployeeShiftRes> SoftDeleteEmployeeShiftAsync(int id);
     }
 }

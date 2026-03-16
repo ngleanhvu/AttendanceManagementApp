@@ -15,6 +15,8 @@ namespace AttendanceManagementApp.Mappings
         public ContractRes ToContractRes(Contract contract)
         {
             if (contract == null) return null;
+            Employee employee = contract.Employee;
+           
             return new ContractRes
             {
                 Id = contract.Id,
@@ -29,7 +31,7 @@ namespace AttendanceManagementApp.Mappings
                 Description = contract.Description,
                 SignedBy = contract.SignedBy,
                 SignedDate = contract.SignedDate,
-                Employee = _employeeMapping.ToEmployeeRes(contract.Employee)
+                Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,
             };
         }
     }

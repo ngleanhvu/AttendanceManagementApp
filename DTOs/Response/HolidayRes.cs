@@ -1,9 +1,8 @@
-﻿using Microsoft.Identity.Client;
-
-namespace AttendanceManagementApp.Models
+﻿namespace AttendanceManagementApp.DTOs.Response
 {
-    public class Holiday : BaseEntity
+    public class HolidayRes
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public DateOnly? Date { get; set; }
         public string Description { get; set; }

@@ -53,7 +53,10 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<ContractRes> GetContractAsync(int id)
         {
-            var contract = _contractRepository.GetByIdAsync(id).Result;
+            var contract = _context.Contracts
+                .AsNoTracking()
+                .Include(c => c.Employee)
+                .FirstOrDefault(c => c.Id == id);
             return _contractMapping.ToContractRes(contract);
         }
 
@@ -104,7 +107,9 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<ContractRes> UpdateContractAsync(int id, ContractCreateReq req)
         {
-            var contract = _contractRepository.GetByIdAsync(id).Result;
+            var contract = _context.Contracts
+                .Include(c => c.Employee)
+                .FirstOrDefault(c => c.Id == id);
             if (contract == null)
                 throw new NotFoundException("Contract not found");
             contract.ContractNumber = req.ContractNumber;

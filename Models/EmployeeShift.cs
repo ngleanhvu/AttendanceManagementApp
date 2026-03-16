@@ -15,5 +15,6 @@
         public int AssignedBy { get; set; }     // ID HR/Admin phân ca
 
         public DateTime AssignedAt { get; set; } // Thời điểm phân ca
+        public int EmployeeId { get; set; }
     }
 }

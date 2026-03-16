@@ -13,6 +13,11 @@ namespace AttendanceManagementApp.Controllers
     {
         private readonly IContractService _contractService;
 
+        public ContractController(IContractService contractService)
+        {
+            _contractService = contractService;
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ContractCreateReq req)
         {
@@ -35,7 +40,7 @@ namespace AttendanceManagementApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
         {
             var contracts = await _contractService.GetContractsAsync(query);
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
@@ -48,7 +53,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<ContractRes>(contract));
         }
 
-        [HttpGet("employee/{employeeId}")]
+        [HttpGet("employees/{employeeId}")]
         public async Task<IActionResult> GetByEmployeeId(int employeeId, [FromQuery] PaginationQuery query)
         {
             var contracts = await _contractService.GetContractsByEmployeeIdAsync(employeeId, query);
