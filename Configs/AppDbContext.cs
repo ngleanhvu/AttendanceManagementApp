@@ -13,7 +13,6 @@ namespace AttendanceManagementApp.Configs
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Employee> Employees { get; set; }
-        public DbSet<EmployeeReward> EmployeesRewards { get; set; }
         public DbSet<EmployeeShift> EmployeeShifts { get; set; }
         public DbSet<Holiday> Holidays { get; set; }
         public DbSet<LeaveType> LeaveTypes { get; set; }
@@ -22,7 +21,7 @@ namespace AttendanceManagementApp.Configs
         public DbSet<OverTime> OverTimes { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
-        public DbSet<RewardType> RewardTypes { get; set; }
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
 

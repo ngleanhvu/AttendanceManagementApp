@@ -1,35 +1,19 @@
-﻿namespace AttendanceManagementApp.Models
+﻿using AttendanceManagementApp.Models;
+using System.ComponentModel.DataAnnotations;
+
+namespace AttendanceManagementApp.DTOs.Request
 {
-    public class LeaveRequest : BaseEntity
+    public class LeaveRequestCreateReq
     {
         public DateTime FromDate { get; set; }
-
         public DateTime ToDate { get; set; }
-
         public float TotalDays { get; set; } // Tổng số ngày nghỉ
-
         public string Reason { get; set; }
-
-        public LeaveStatus LeaveStatus { get; set; } // Pending, Approved, Rejected
-
+        public int LeaveStatus { get; set; } // Pending, Approved, Rejected
         public DateTime CreatedDate { get; set; }
-
         public DateTime? ApprovedDate { get; set; }
-
         public string? RejectReason { get; set; }
-
-        // Quan hệ
         public int EmployeeId { get; set; }
-        public Employee Employee { get; set; }
-
         public int LeaveTypeId { get; set; }
-        public LeaveType LeaveType { get; set; }
-    }
-
-    public enum LeaveStatus
-    {
-        Pending = 1,
-        Approved = 2,
-        Rejected = 3,
     }
 }
