@@ -34,5 +34,9 @@ namespace AttendanceManagementApp.DTOs.Request
 
         [Required(ErrorMessage = "Employee ID is required")]
         public int EmployeeId { get; set; }
+        public decimal? AllowancePark { get; set; }
+        public decimal? AllowanceLunchBreak { get; set; }
+        public decimal? Tax { get; set; }
+        public int TotalLeavingsPerMonth { get; set; }
     }
 }

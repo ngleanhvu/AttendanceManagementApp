@@ -7,12 +7,15 @@ using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AttendanceManagementApp.Services.Impl
 {
     public class AttendanceService : IAttendanceService
     {
+        public readonly int HOUR_CHECK_IN = 8;
+        public readonly int MINUTE_CHECK_IN = 30;
         private readonly IEmployeeService _employeeService;
         private readonly IRepository<Attendance> _attendanceRepository;
         private readonly AppDbContext _appDbContext;
@@ -29,19 +32,24 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task<AttendanceRes> CheckInAsync(AttendanceCheckInReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
-            var today = DateOnly.FromDateTime(DateTime.Now);
-            var existAttendance = _appDbContext.Attendances.Include(x => x.Employee)
-                .MinAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
+            var now = DateTime.Now;
+            var today = DateOnly.FromDateTime(now);
 
-            if (existAttendance != null)
+            // ✅ Check đã chấm công chưa
+            var existAttendance = await _appDbContext.Attendances
+                .AnyAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
+
+            if (existAttendance)
                 throw new BadRequestException("Employee already checked in today");
+            var standardTime = new TimeSpan(HOUR_CHECK_IN, MINUTE_CHECK_IN, 0);
+            bool isLate = now.TimeOfDay > standardTime;
 
             var attendance = new Attendance
             {
                 WorkDate = today,
-                CheckIn = DateTime.Now,
+                CheckIn = now,
                 Employee = employee,
-                Note = req.Note
+                AttendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT
             };
 
             await _attendanceRepository.AddAsync(attendance);
@@ -63,6 +71,7 @@ namespace AttendanceManagementApp.Services.Impl
             return _attendanceMapping.ToAttendanceRes(attendance);
         }
 
+        [HttpGet]
         public async Task<PagedResult<AttendanceRes>> GetAttendancesAsync(AttendanceFilterReq req, PaginationQuery query)
         {
             var pageable = _appDbContext.Attendances

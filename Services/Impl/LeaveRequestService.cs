@@ -47,6 +47,7 @@ namespace AttendanceManagementApp.Services.Impl
                 LeaveStatus = LeaveStatus.Pending,
                 EmployeeId = employee.Id,
                 LeaveType = leaveType,
+                Reason = req.Reason,
             };
             await _leaveRequestRepository.AddAsync(leaveRequest);
             await _leaveRequestRepository.SaveAsync();
@@ -109,7 +110,7 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<LeaveRequestRes> UpdateLeaveStatusAsync(int id, LeaveRequestUpdateStatusReq req)
         {
-            var leaveRequest = await _leaveRequestRepository.GetByIdAsync(id);
+            var leaveRequest = _appDbContext.LeaveRequests.Include(x => x.Employee).Include(x => x.LeaveType).FirstOrDefault();
             if (leaveRequest == null)
             {
                 throw new NotFoundException("Leave request not found");
@@ -118,7 +119,6 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 case 2:
                     leaveRequest.ApprovedDate = DateTime.Now;
-                    leaveRequest.Reason = req.Reason;
                     leaveRequest.LeaveStatus = (LeaveStatus)req.LeaveStatus;
                     break;
                 case 3:

@@ -12,12 +12,15 @@ namespace AttendanceManagementApp.DTOs.Response
         public DateOnly StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
         public decimal BaseSalary { get; set; }
-        public decimal? Allowance { get; set; }
+        public decimal? AllowancePark { get; set; }
+        public decimal? AllowanceLunchBreak { get; set; }
         public decimal? InsuranceSalary { get; set; }
         public ContractStatus Status { get; set; }
         public string? Description { get; set; }
         public string? SignedBy { get; set; }
         public DateOnly? SignedDate { get; set; }
         public EmployeeRes? Employee { get; set; }
+        public decimal? Tax { get; set; }
+        public int TotalLeavingsPerMonth { get; set; }
     }
 }

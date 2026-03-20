@@ -25,13 +25,16 @@ namespace AttendanceManagementApp.Mappings
                 StartDate = contract.StartDate,
                 EndDate = contract.EndDate,
                 BaseSalary = contract.BaseSalary,
-                Allowance = contract.Allowance,
+                AllowancePark = contract.AllowancePark,
+                Tax = contract.Tax,
+                AllowanceLunchBreak = contract.AllowanceLunchBreak,
                 InsuranceSalary = contract.InsuranceSalary,
                 Status = contract.ContractStatus,
                 Description = contract.Description,
                 SignedBy = contract.SignedBy,
                 SignedDate = contract.SignedDate,
                 Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,
+                TotalLeavingsPerMonth = contract.TotalLeavingsPerMonth,
             };
         }
     }

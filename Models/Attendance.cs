@@ -17,6 +17,6 @@ namespace AttendanceManagementApp.Models
         public AttendanceStatus AttendanceStatus { get; set; }
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
     }
 }

@@ -26,7 +26,7 @@ namespace AttendanceManagementApp.Mappings
                 TotalDays = req.TotalDays,
                 Reason = req.Reason,
                 RejectReason = req.RejectReason,
-                LeaveStatus = req.LeaveStatus,
+                LeaveStatus = req.LeaveStatus.ToString(),
                 Employee = _employeeMapping.ToEmployeeRes(req.Employee),
                 LeaveType = _leaveTypeMapping.ToLeaveTypeRes(req.LeaveType),
                 CreatedDate = req.CreatedDate,

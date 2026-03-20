@@ -8,7 +8,7 @@ namespace AttendanceManagementApp.DTOs.Response
         public DateOnly WorkDate { get; set; }
         public DateTime? CheckIn { get; set; }
         public DateTime? CheckOut { get; set; }
+        public string AttendanceStatus { get; set; }
         public EmployeeRes Employee { get; set; }
-        public string Note { get; set; }
     }
 }

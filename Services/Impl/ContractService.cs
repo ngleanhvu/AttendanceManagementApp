@@ -43,7 +43,10 @@ namespace AttendanceManagementApp.Services.Impl
                 SignedDate = req.SignedDate,
                 BaseSalary = req.BaseSalary,
                 InsuranceSalary = req.InsuranceSalary,
-                Allowance = req.Allowance
+                AllowanceLunchBreak = req.AllowanceLunchBreak,
+                AllowancePark = req.AllowancePark,
+                Tax = req.Tax,
+                TotalLeavingsPerMonth = req.TotalLeavingsPerMonth,
             };
             await _contractRepository.AddAsync(contract);
             await _contractRepository.SaveAsync();
@@ -117,7 +120,10 @@ namespace AttendanceManagementApp.Services.Impl
             contract.StartDate = req.StartDate;
             contract.EndDate = req.EndDate;
             contract.BaseSalary = req.BaseSalary;
-            contract.Allowance = req.Allowance;
+            contract.AllowancePark = req.AllowancePark;
+            contract.AllowanceLunchBreak = req.AllowanceLunchBreak;
+            contract.TotalLeavingsPerMonth = req.TotalLeavingsPerMonth;
+            contract.Tax = req.Tax;
             contract.InsuranceSalary = req.InsuranceSalary;
             contract.ContractStatus = (Models.Enum.ContractStatus)req.ContractStatus;
             contract.Description = req.Description;
