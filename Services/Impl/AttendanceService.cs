@@ -16,11 +16,13 @@ namespace AttendanceManagementApp.Services.Impl
     {
         public readonly int HOUR_CHECK_IN = 8;
         public readonly int MINUTE_CHECK_IN = 30;
+        public readonly int HOUR_CHECK_OUT = 17;
+        public readonly int MINUTE_CHECK_OUT = 30;
         private readonly IEmployeeService _employeeService;
         private readonly IRepository<Attendance> _attendanceRepository;
         private readonly AppDbContext _appDbContext;
         private readonly AttendanceMapping _attendanceMapping;
-        public AttendanceService(IEmployeeService employeeService, 
+        public AttendanceService(IEmployeeService employeeService,
             IRepository<Attendance> attendanceRepository, AppDbContext appDbContext,
             AttendanceMapping attendanceMapping)
         {
@@ -47,7 +49,7 @@ namespace AttendanceManagementApp.Services.Impl
             var attendance = new Attendance
             {
                 WorkDate = today,
-                CheckIn = now,
+                CheckIn = DateTime.Now,
                 Employee = employee,
                 AttendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT
             };
@@ -76,8 +78,9 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pageable = _appDbContext.Attendances
                     .AsNoTracking()
+                    .Include(x => x.Employee)
                     .AsQueryable();
-            
+
             if (req.AttendanceStatus.HasValue)
             {
                 pageable = pageable.Where(x => x.Equals(req.AttendanceStatus.Value));
@@ -87,7 +90,14 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 pageable = pageable.Where(x => req.FromDate <= x.WorkDate);
             }
-
+            if (req.Month.HasValue)
+            {
+                pageable = pageable.Where(x => x.WorkDate.Month == req.Month);
+            }
+            if (req.Year.HasValue)
+            {
+                pageable = pageable.Where(x => x.WorkDate.Year == req.Year);
+            }
             if (req.ToDate.HasValue)
             {
                 pageable = pageable.Where(x => req.ToDate >= x.WorkDate);
@@ -95,7 +105,7 @@ namespace AttendanceManagementApp.Services.Impl
 
             if (req.EmployeeId.HasValue)
             {
-                pageable = pageable.Include(x => x.EmployeeId).Where(x => x.EmployeeId == req.EmployeeId);
+                pageable = pageable.Where(x => x.EmployeeId == req.EmployeeId);
             }
 
             var count = await pageable.CountAsync();
@@ -110,5 +120,67 @@ namespace AttendanceManagementApp.Services.Impl
                 PageSize = query.PageSize,
             };
         }
+
+        public async Task<AttendanceWorkloadRes> GetAttendanceWorkloadAsync(int employeeId, int month, int year)
+        {
+            int totalWorkingDays = 0;
+            double overtimeWorkingHours = 0;
+            int totalCheckInLate = 0;
+
+            var filter = new AttendanceFilterReq
+            {
+                EmployeeId = employeeId,
+                Month = month,
+                Year = year
+            };
+
+            var query = new PaginationQuery
+            {
+                PageSize = 32
+            };
+
+            var res = await GetAttendancesAsync(filter, query);
+
+            if (res?.Items == null || !res.Items.Any()) // ✅ Guard null/empty
+            {
+                return new AttendanceWorkloadRes
+                {
+                    TotalWorkingDays = 0,
+                    TotalCheckInLates = 0,
+                    OvertimeWorkingHours = 0
+                };
+            }
+
+            var standardCheckOutTime = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
+
+            foreach (var item in res.Items)
+            {
+                if (item.CheckIn.HasValue)
+                {
+                    totalWorkingDays++;
+                }
+
+                if (item.AttendanceStatus == AttendanceStatus.LATE.ToString())
+                {
+                    totalCheckInLate++;
+                }
+
+                // ✅ Chỉ tính OT khi checkout sau giờ chuẩn
+                var standardCheckInTime = new TimeSpan(HOUR_CHECK_IN, MINUTE_CHECK_IN, 0);
+
+                // ✅ So sánh TimeOfDay
+                if (item.CheckIn.HasValue && item.CheckIn.Value.TimeOfDay > standardCheckInTime)
+                {
+                    totalCheckInLate++;
+                }
+            }
+
+            return new AttendanceWorkloadRes
+            {
+                TotalWorkingDays = totalWorkingDays,
+                TotalCheckInLates = totalCheckInLate,
+                OvertimeWorkingHours = (float)Math.Round(overtimeWorkingHours, 2)
+            };
+        }
+    }   
     }
-}

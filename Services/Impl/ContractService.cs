@@ -27,6 +27,25 @@ namespace AttendanceManagementApp.Services.Impl
             this._contractMapping = contractMapping;
         }
 
+        public async Task<ContractRes> ActiveContractByEmployeeIdAsync(int contractId, int employeeId)
+        {
+            var contract = await _contractRepository.GetByIdAsync(contractId);
+            if (contract == null)
+            {
+                throw new NotFoundException("Contract not found");
+            }
+            var contractActive = await GetContractActiveByEmployeeIdAsync(employeeId);
+            if (contractActive != null)
+            {
+                contractActive.ContractStatus = Models.Enum.ContractStatus.NOT_ACTIVE;
+                _contractRepository.Update(contractActive);
+            } 
+            contract.ContractStatus = Models.Enum.ContractStatus.ACTIVE;
+            _contractRepository.Update(contract);
+            await _contractRepository.SaveAsync();
+            return _contractMapping.ToContractRes(contract);
+        }
+
         public async Task<ContractRes> CreateContractAsync(ContractCreateReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
@@ -35,14 +54,13 @@ namespace AttendanceManagementApp.Services.Impl
                 Employee = employee,
                 StartDate = req.StartDate,
                 EndDate = req.EndDate,
-                ContractStatus = Models.Enum.ContractStatus.ACTIVE,
+                ContractStatus = Models.Enum.ContractStatus.NOT_ACTIVE,
                 ContractNumber = req.ContractNumber,
                 ContractType = (Models.Enum.ContractType)req.ContractType,
                 Description = req.Description,
                 SignedBy = req.SignedBy,
                 SignedDate = req.SignedDate,
                 BaseSalary = req.BaseSalary,
-                InsuranceSalary = req.InsuranceSalary,
                 AllowanceLunchBreak = req.AllowanceLunchBreak,
                 AllowancePark = req.AllowancePark,
                 Tax = req.Tax,
@@ -52,6 +70,13 @@ namespace AttendanceManagementApp.Services.Impl
             await _contractRepository.SaveAsync();
 
             return _contractMapping.ToContractRes(contract);
+        }
+
+        public async Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
+            var contractActive = await _context.Contracts.Where(x => x.Status == true).FirstOrDefaultAsync(null);
+            return contractActive;
         }
 
         public async Task<ContractRes> GetContractAsync(int id)
@@ -124,7 +149,6 @@ namespace AttendanceManagementApp.Services.Impl
             contract.AllowanceLunchBreak = req.AllowanceLunchBreak;
             contract.TotalLeavingsPerMonth = req.TotalLeavingsPerMonth;
             contract.Tax = req.Tax;
-            contract.InsuranceSalary = req.InsuranceSalary;
             contract.ContractStatus = (Models.Enum.ContractStatus)req.ContractStatus;
             contract.Description = req.Description;
             contract.SignedBy = req.SignedBy;

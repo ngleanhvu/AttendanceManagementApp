@@ -4,6 +4,6 @@
     {
         ACTIVE = 1,
         EXPIRED = 2,
-        TERTIARY = 3,
+        NOT_ACTIVE = 3,
     }
 }

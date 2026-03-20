@@ -28,7 +28,7 @@ namespace AttendanceManagementApp.Mappings
                 AllowancePark = contract.AllowancePark,
                 Tax = contract.Tax,
                 AllowanceLunchBreak = contract.AllowanceLunchBreak,
-                InsuranceSalary = contract.InsuranceSalary,
+                WorkingPerMonth = contract.WorkingPerMonth,
                 Status = contract.ContractStatus,
                 Description = contract.Description,
                 SignedBy = contract.SignedBy,

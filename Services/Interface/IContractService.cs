@@ -1,5 +1,6 @@
 ﻿using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Utils;
 
 namespace AttendanceManagementApp.Services.Interface
@@ -12,6 +13,7 @@ namespace AttendanceManagementApp.Services.Interface
         Task<PagedResult<ContractRes>> GetContractsByEmployeeIdAsync(int employeeId, PaginationQuery query);
         Task<ContractRes> UpdateContractAsync(int id, ContractCreateReq req);
         Task<ContractRes> UpdateContractStatusAsync(int id, int contractStatus);
-
+        Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId);
+        Task<ContractRes> ActiveContractByEmployeeIdAsync(int contractId, int employeeId);
     }
 }

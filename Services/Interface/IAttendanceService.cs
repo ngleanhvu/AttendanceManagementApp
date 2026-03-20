@@ -9,5 +9,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<AttendanceRes> CheckInAsync(AttendanceCheckInReq req);
         Task<AttendanceRes> CheckOutAsync(int attendanceId);
         Task<PagedResult<AttendanceRes>> GetAttendancesAsync(AttendanceFilterReq filter, PaginationQuery query);
+        Task<AttendanceWorkloadRes> GetAttendanceWorkloadAsync(int employeeId, int month, int year);
     }
 }

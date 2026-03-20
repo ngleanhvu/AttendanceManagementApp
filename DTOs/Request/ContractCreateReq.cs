@@ -20,7 +20,7 @@ namespace AttendanceManagementApp.DTOs.Request
 
         public decimal? Allowance { get; set; }
 
-        public decimal? InsuranceSalary { get; set; }
+        public int? WorkingPerMonth { get; set; }
 
         [Required(ErrorMessage = "Contract status is required")]
         public int ContractStatus { get; set; }
