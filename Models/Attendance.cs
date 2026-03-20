@@ -4,7 +4,7 @@ namespace AttendanceManagementApp.Models
 {
     public enum AttendanceStatus
     {
-        PRSENT = 1,
+        PRESENT = 1,
         LATE = 2
     }
     public class Attendance : BaseEntity
@@ -17,8 +17,6 @@ namespace AttendanceManagementApp.Models
         public AttendanceStatus AttendanceStatus { get; set; }
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
-        public int ShiftId { get; set; }
-        public Shift Shift { get; set; }
         public string Note { get; set; }
     }
 }

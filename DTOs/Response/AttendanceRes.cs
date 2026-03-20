@@ -9,7 +9,6 @@ namespace AttendanceManagementApp.DTOs.Response
         public DateTime? CheckIn { get; set; }
         public DateTime? CheckOut { get; set; }
         public EmployeeRes Employee { get; set; }
-        public ShiftRes Shift { get; set; }
         public string Note { get; set; }
     }
 }

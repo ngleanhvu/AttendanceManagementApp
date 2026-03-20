@@ -8,7 +8,6 @@ namespace AttendanceManagementApp.DTOs.Request
     {
         public DateOnly WorkDate { get; set; }
         public int EmployeeId { get; set; }
-        public int ShiftId { get; set; }
         public string Note { get; set; }
     }
 }

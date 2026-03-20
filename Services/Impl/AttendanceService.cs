@@ -14,16 +14,14 @@ namespace AttendanceManagementApp.Services.Impl
     public class AttendanceService : IAttendanceService
     {
         private readonly IEmployeeService _employeeService;
-        private readonly IShiftService _shiftService;
         private readonly IRepository<Attendance> _attendanceRepository;
         private readonly AppDbContext _appDbContext;
         private readonly AttendanceMapping _attendanceMapping;
-        public AttendanceService(IEmployeeService employeeService, IShiftService shiftService,
+        public AttendanceService(IEmployeeService employeeService, 
             IRepository<Attendance> attendanceRepository, AppDbContext appDbContext,
             AttendanceMapping attendanceMapping)
         {
             this._employeeService = employeeService;
-            this._shiftService = shiftService;
             this._appDbContext = appDbContext;
             this._attendanceRepository = attendanceRepository;
             this._attendanceMapping = attendanceMapping;
@@ -31,7 +29,6 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task<AttendanceRes> CheckInAsync(AttendanceCheckInReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
-            var shift = await _shiftService.GetShiftByIdAsync(req.ShiftId);
             var today = DateOnly.FromDateTime(DateTime.Now);
             var existAttendance = _appDbContext.Attendances.Include(x => x.Employee)
                 .MinAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
@@ -44,7 +41,6 @@ namespace AttendanceManagementApp.Services.Impl
                 WorkDate = today,
                 CheckIn = DateTime.Now,
                 Employee = employee,
-                Shift = shift,
                 Note = req.Note
             };
 

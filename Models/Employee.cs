@@ -31,6 +31,5 @@ namespace AttendanceManagementApp.Models
 
         public ICollection<Attendance> Attendances { get; set; }
 
-        public ICollection<EmployeeShift> EmployeeShifts { get; set; }
     }
 }

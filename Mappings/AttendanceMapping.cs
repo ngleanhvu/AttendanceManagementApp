@@ -6,12 +6,10 @@ namespace AttendanceManagementApp.Mappings
     public class AttendanceMapping
     {
         private readonly EmployeeMapping _employeeMapping;
-        private readonly ShiftMapping _shiftMapping;
 
-        public AttendanceMapping(EmployeeMapping employeeMapping, ShiftMapping shiftMapping)
+        public AttendanceMapping(EmployeeMapping employeeMapping)
         {
             this._employeeMapping = employeeMapping;
-            this._shiftMapping = shiftMapping;
         }
         public AttendanceRes ToAttendanceRes(Attendance attendance)
         {
@@ -25,7 +23,6 @@ namespace AttendanceManagementApp.Mappings
                 CheckOut = attendance.CheckOut,
                 Note = attendance.Note,
                 Employee = attendance.Employee != null ? _employeeMapping.ToEmployeeRes(attendance.Employee) : null,
-                Shift = attendance.Shift != null ? _shiftMapping.ToShiftRes(attendance.Shift) : null
             };
         }
     }

@@ -30,6 +30,9 @@ namespace AttendanceManagementApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AttendanceStatus")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CheckIn")
                         .HasColumnType("datetime2");
 
@@ -42,27 +45,22 @@ namespace AttendanceManagementApp.Migrations
                     b.Property<int>("EmployeeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ShiftId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
+                    b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<float>("TotalHours")
-                        .HasColumnType("real");
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("WorkDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ShiftId");
 
                     b.ToTable("Attendances");
                 });
@@ -273,101 +271,6 @@ namespace AttendanceManagementApp.Migrations
                     b.ToTable("EmployeeDetail");
                 });
 
-            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeReward", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<float>("Amount")
-                        .HasColumnType("real");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Note")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RewardTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("RewardTypeId");
-
-                    b.ToTable("EmployeesRewards");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeShift", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AssignedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("AssignedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateOnly>("FromDate")
-                        .HasColumnType("date");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ShiftId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<DateOnly>("ToDate")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("ShiftId");
-
-                    b.ToTable("EmployeeShifts");
-                });
-
             modelBuilder.Entity("AttendanceManagementApp.Models.Holiday", b =>
                 {
                     b.Property<int>("Id")
@@ -376,12 +279,21 @@ namespace AttendanceManagementApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowWork")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
 
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPaidHoliday")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Month")
                         .HasColumnType("int");
@@ -389,6 +301,9 @@ namespace AttendanceManagementApp.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SalaryCoefficient")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
@@ -409,6 +324,9 @@ namespace AttendanceManagementApp.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -421,6 +339,9 @@ namespace AttendanceManagementApp.Migrations
                     b.Property<DateTime>("FromDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("LeaveStatus")
+                        .HasColumnType("int");
+
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("int");
 
@@ -428,11 +349,17 @@ namespace AttendanceManagementApp.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RejectReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
 
                     b.Property<DateTime>("ToDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<float>("TotalDays")
+                        .HasColumnType("real");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -443,7 +370,7 @@ namespace AttendanceManagementApp.Migrations
 
                     b.HasIndex("LeaveTypeId");
 
-                    b.ToTable("LeaveRequest");
+                    b.ToTable("LeaveRequests");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.LeaveType", b =>
@@ -457,12 +384,25 @@ namespace AttendanceManagementApp.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
+
+                    b.Property<int>("MaxDaysPerMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxDaysPerYear")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
@@ -473,42 +413,6 @@ namespace AttendanceManagementApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("LeaveTypes");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.OverTime", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("int");
-
-                    b.Property<float>("Hours")
-                        .HasColumnType("real");
-
-                    b.Property<float>("Rate")
-                        .HasColumnType("real");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("WorkDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.ToTable("OverTimes");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.Payroll", b =>
@@ -633,36 +537,6 @@ namespace AttendanceManagementApp.Migrations
                     b.ToTable("Positions");
                 });
 
-            modelBuilder.Entity("AttendanceManagementApp.Models.RewardType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("RewardTypes");
-                });
-
             modelBuilder.Entity("AttendanceManagementApp.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -688,66 +562,6 @@ namespace AttendanceManagementApp.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.Shift", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("AllowedEarlyLeaveMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AllowedLateMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan?>("BreakEndTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("BreakStartTime")
-                        .HasColumnType("time");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsOvernight")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ShiftType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StandardHours")
-                        .HasColumnType("int");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Shifts");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.User", b =>
@@ -797,15 +611,7 @@ namespace AttendanceManagementApp.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AttendanceManagementApp.Models.Shift", "Shift")
-                        .WithMany("Attendances")
-                        .HasForeignKey("ShiftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Employee");
-
-                    b.Navigation("Shift");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.Contract", b =>
@@ -846,44 +652,6 @@ namespace AttendanceManagementApp.Migrations
                     b.Navigation("Position");
                 });
 
-            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeReward", b =>
-                {
-                    b.HasOne("AttendanceManagementApp.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AttendanceManagementApp.Models.RewardType", "RewardType")
-                        .WithMany("EmployeeRewards")
-                        .HasForeignKey("RewardTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("RewardType");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeShift", b =>
-                {
-                    b.HasOne("AttendanceManagementApp.Models.Employee", "Employee")
-                        .WithMany("EmployeeShifts")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AttendanceManagementApp.Models.Shift", "Shift")
-                        .WithMany("EmployeeShifts")
-                        .HasForeignKey("ShiftId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Shift");
-                });
-
             modelBuilder.Entity("AttendanceManagementApp.Models.LeaveRequest", b =>
                 {
                     b.HasOne("AttendanceManagementApp.Models.Employee", "Employee")
@@ -893,7 +661,7 @@ namespace AttendanceManagementApp.Migrations
                         .IsRequired();
 
                     b.HasOne("AttendanceManagementApp.Models.LeaveType", "LeaveType")
-                        .WithMany("LeaveRequests")
+                        .WithMany()
                         .HasForeignKey("LeaveTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -901,17 +669,6 @@ namespace AttendanceManagementApp.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("LeaveType");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.OverTime", b =>
-                {
-                    b.HasOne("AttendanceManagementApp.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.Payroll", b =>
@@ -960,13 +717,6 @@ namespace AttendanceManagementApp.Migrations
 
                     b.Navigation("EmployeeDetail")
                         .IsRequired();
-
-                    b.Navigation("EmployeeShifts");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.LeaveType", b =>
-                {
-                    b.Navigation("LeaveRequests");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.Payroll", b =>
@@ -979,21 +729,9 @@ namespace AttendanceManagementApp.Migrations
                     b.Navigation("EmployeeDetails");
                 });
 
-            modelBuilder.Entity("AttendanceManagementApp.Models.RewardType", b =>
-                {
-                    b.Navigation("EmployeeRewards");
-                });
-
             modelBuilder.Entity("AttendanceManagementApp.Models.Role", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("AttendanceManagementApp.Models.Shift", b =>
-                {
-                    b.Navigation("Attendances");
-
-                    b.Navigation("EmployeeShifts");
                 });
 #pragma warning restore 612, 618
         }

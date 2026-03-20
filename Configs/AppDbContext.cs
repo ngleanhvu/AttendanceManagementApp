@@ -13,12 +13,9 @@ namespace AttendanceManagementApp.Configs
         public DbSet<Contract> Contracts { get; set; }
         public DbSet<Department> Departments { get; set; }
         public DbSet<Employee> Employees { get; set; }
-        public DbSet<EmployeeShift> EmployeeShifts { get; set; }
         public DbSet<Holiday> Holidays { get; set; }
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Position> Positions { get; set; }
-        public DbSet<Shift> Shifts { get; set; }
-        public DbSet<OverTime> OverTimes { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
