@@ -59,5 +59,12 @@ namespace AttendanceManagementApp.Controllers
             var contracts = await _contractService.GetContractsByEmployeeIdAsync(employeeId, query);
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
         }
+
+        [HttpPatch("active/{id}/employees/{employeeId}")]
+        public async Task<IActionResult> ActiveContract(int id, int employeeId)
+        {
+            var res = await _contractService.ActiveContractByEmployeeIdAsync(id, employeeId);
+            return Ok(new ApiResponse<ContractRes>(res));
+        }
     }
 }

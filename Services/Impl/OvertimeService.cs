@@ -52,7 +52,7 @@ namespace AttendanceManagementApp.Services.Impl
                 From = req.From,
                 To = req.To,
                 Reason = req.Reason,
-                IsApproved = req.IsApproved,
+                IsApproved = false
             };
             await _repository.AddAsync(overtime);
             await _repository.SaveAsync();
@@ -61,13 +61,16 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<bool> ExistOverTimeAsync(int id, DateOnly workDate)
         {
-            var overtime = await _appDbContext.OverTimes
-                .Where(x => x.Employee.Id == id)
-                .Where(x => x.WorkDate == workDate)
-                .FirstAsync();
-            if (overtime == null || overtime.Status == false)
-                return false;
-            return true;
+            return await _appDbContext.OverTimes
+                .AnyAsync(x => x.EmployeeId == id
+                            && x.WorkDate == workDate
+                            && x.Status == true);
+        }
+
+        public async Task<OverTime?> GetOverTimeByEmployeeIdAndWorkDateAsync(int employeeId, DateOnly workDate)
+        {
+            return await _appDbContext.OverTimes
+                .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.WorkDate == workDate && x.Status == true);
         }
 
         public async Task<PagedResult<OvertimeRes>> GetOverTimesAsync(OvertimeFilterReq req, PaginationQuery query)

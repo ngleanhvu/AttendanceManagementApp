@@ -13,5 +13,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<EmployeeDetailRes> GetEmployeeAsync(int id);
         Task<EmployeeRes> SoftDeleteEmployeeAsync(int id);
         Task<Employee> GetEmployeeByIdAsync(int id);
+        Task<List<Employee>> GetAllEmployeeAsync();
     }
 }

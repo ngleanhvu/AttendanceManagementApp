@@ -41,5 +41,27 @@ namespace AttendanceManagementApp.Mappings
                 Employee = req.Employee != null ? _employeeMapping.ToEmployeeRes(req.Employee) : null,
             };
         }
+
+        public FullPayrollDetailRes ToFullPayrollDetailRes (Payroll payroll)
+        {
+            if (payroll == null)
+            {
+                return null;
+            }
+
+            var payrollRes = ToPayrollRes(payroll);
+            var payrollDetailsRes = payroll.PayrollDetails.Select(x => new PayrollDetailRes
+            {
+                Id = x.Id,
+                Description = x.Description,
+                Amount = x.Amount,
+                Type = x.Type.ToString(),
+            }).ToList();
+            return new FullPayrollDetailRes
+            {
+                Payroll = payrollRes,
+                PayrollList = payrollDetailsRes,
+            };
+        }
     }
 }

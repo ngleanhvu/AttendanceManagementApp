@@ -66,6 +66,7 @@ namespace AttendanceManagementApp.Services.Impl
                 Tax = req.Tax,
                 OverTimeRate = req.OverTimeRate,
                 TotalLeavingsPerMonth = req.TotalLeavingsPerMonth,
+                WorkingPerMonth = req.WorkingPerMonth,
             };
             await _contractRepository.AddAsync(contract);
             await _contractRepository.SaveAsync();
@@ -76,7 +77,7 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-            var contractActive = await _context.Contracts.Where(x => x.Status == true).FirstOrDefaultAsync(null);
+            var contractActive = await _context.Contracts.Where(x => x.Status == true).FirstAsync();
             return contractActive;
         }
 

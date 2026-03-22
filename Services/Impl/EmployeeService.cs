@@ -206,5 +206,12 @@ namespace AttendanceManagementApp.Services.Impl
                 throw new NotFoundException("Employee not found");
             return employee;
         }
+
+        public async Task<List<Employee>> GetAllEmployeeAsync()
+        {
+            var res = await _context.Employees
+                .AsNoTracking() .ToListAsync();
+            return res;
+        }
     }
 }

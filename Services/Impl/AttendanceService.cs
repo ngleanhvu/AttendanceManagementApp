@@ -166,13 +166,31 @@ namespace AttendanceManagementApp.Services.Impl
                         totalCheckInLate++;
                     }
 
-                    // ✅ Chỉ tính OT khi checkout sau giờ chuẩn
                     var standardCheckOutTime = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
-                    var existOverTime = await _overtimeSerivce.ExistOverTimeAsync(employeeId, item.WorkDate);
-                    // ✅ So sánh TimeOfDay
-                    if (existOverTime == true && item.CheckOut.HasValue && item.CheckOut.Value.TimeOfDay > standardCheckOutTime)
+
+                    var overtime = await _overtimeSerivce
+                        .GetOverTimeByEmployeeIdAndWorkDateAsync(employeeId, item.WorkDate);
+
+                    if (overtime != null
+                        && overtime.IsApproved
+                        && item.CheckOut.HasValue)
                     {
-                        overtimeWorkingHours += (item.CheckOut.Value.TimeOfDay - standardCheckOutTime).TotalHours;
+                        var checkOutTime = item.CheckOut.Value.TimeOfDay;
+
+                        // Convert TimeOnly → TimeSpan
+                        var otFrom = overtime.From.ToTimeSpan();
+                        var otTo = overtime.To.ToTimeSpan();
+
+                        // Lấy thời điểm bắt đầu OT thực tế (max giữa checkout chuẩn và OT from)
+                        var start = checkOutTime > otFrom ? otFrom : standardCheckOutTime;
+
+                        // Lấy thời điểm kết thúc OT (không vượt quá OT To)
+                        var end = checkOutTime < otTo ? checkOutTime : otTo;
+
+                        if (end > start)
+                        {
+                            overtimeWorkingHours += (end - start).TotalHours;
+                        }
                     }
                 }
 

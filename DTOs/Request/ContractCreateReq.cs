@@ -13,31 +13,31 @@ namespace AttendanceManagementApp.DTOs.Request
         [Required(ErrorMessage = "Start date is required")]
         public DateOnly StartDate { get; set; }
 
-        public DateOnly? EndDate { get; set; }
+        public DateOnly EndDate { get; set; }
 
         [Required(ErrorMessage = "Base salary is required")]
         public decimal BaseSalary { get; set; }
 
-        public decimal? Allowance { get; set; }
+        public decimal Allowance { get; set; }
 
-        public int? WorkingPerMonth { get; set; }
+        public int WorkingPerMonth { get; set; }
 
         [Required(ErrorMessage = "Contract status is required")]
         public int ContractStatus { get; set; }
 
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
-        public string? SignedBy { get; set; }
+        public string SignedBy { get; set; }
 
         [Required(ErrorMessage = "Signed date is required")]
         public DateOnly? SignedDate { get; set; }
 
         [Required(ErrorMessage = "Employee ID is required")]
         public int EmployeeId { get; set; }
-        public decimal? AllowancePark { get; set; }
-        public decimal? AllowanceLunchBreak { get; set; }
-        public decimal? Tax { get; set; }
+        public decimal AllowancePark { get; set; }
+        public decimal AllowanceLunchBreak { get; set; }
+        public decimal Tax { get; set; }
         public int TotalLeavingsPerMonth { get; set; }
-        public decimal? OverTimeRate { get; set; }
+        public decimal OverTimeRate { get; set; }
     }
 }

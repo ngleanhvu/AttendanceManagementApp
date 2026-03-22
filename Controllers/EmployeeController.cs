@@ -39,7 +39,7 @@ namespace AttendanceManagementApp.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {
             var employees = await _employeeService.GetEmployeesAsync(query);
             return Ok(new ApiResponse<PagedResult<EmployeeRes>>(employees));

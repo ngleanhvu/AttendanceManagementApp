@@ -29,7 +29,7 @@ builder.Services.AddScoped<AttendanceMapping>();
 builder.Services.AddScoped<LeaveTypeMapping>();
 builder.Services.AddScoped<LeaveRequestMapping>();
 builder.Services.AddScoped<OvertimeMapping>();
-builder.Services.AddScoped<PayrollDetailService>();
+builder.Services.AddScoped<PayrollMapping>();
 
 // Repositories
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -44,7 +44,7 @@ builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
-builder.Services.AddScoped<IOvertimeService, IOvertimeService>();
+builder.Services.AddScoped<IOvertimeService, OvertimeService>();
 
 // Cloudinary config
 builder.Services.Configure<CloudinaryConfig>(

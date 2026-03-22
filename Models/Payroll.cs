@@ -42,8 +42,8 @@
 
     public enum PayrollStatus
     {
-        PENDING,
-        APPROVED,
-        PAID
+        PENDING = 1,
+        APPROVED = 2,
+        PAID = 3
     }
 }

@@ -13,5 +13,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<PagedResult<OvertimeRes>> GetOverTimesAsync(OvertimeFilterReq req, PaginationQuery query);
         Task<OvertimeRes> ApprovedOverTimeAsync(int id);
         Task<bool> ExistOverTimeAsync(int id, DateOnly workDate);
+        Task<OverTime> GetOverTimeByEmployeeIdAndWorkDateAsync(int employeeId, DateOnly workDate);
     }
 }
