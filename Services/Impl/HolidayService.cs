@@ -30,12 +30,12 @@ namespace AttendanceManagementApp.Services.Impl
             var holiday = new Holiday()
             {
                 Name = req.Name,
-                Date = req.Date,
+                TotalDay = req.TotalDay,
                 Description = req.Description,
                 Month = req.Month,
-                IsPaidHoliday = req.IsPaidHoliday,
-                AllowWork = req.AllowWork,
-                SalaryCoefficient = req.SalaryCoefficient
+                Year = req.Year,
+                FromDate = req.FromDate,
+                ToDate = req.ToDate,
             };
             await _holidayRepository.AddAsync(holiday);
             await _holidayRepository.SaveAsync();
@@ -57,6 +57,7 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pageable = _appDbContext.Holidays
                 .AsQueryable()
+                .Where(x => x.Status == true)
                 .ApplySearch(query.Search, x => x.Name, x => x.Description)
                 .ApplySorting(query.SortBy, query.Desc);
             var count = await pageable.CountAsync();
@@ -85,6 +86,21 @@ namespace AttendanceManagementApp.Services.Impl
             return _holidayMapping.ToHolidayRes(holiday);
         }
 
+        public async Task<int> TotalHolidayAsync(int month, int year)
+        {
+            var totalDay = await _appDbContext.Holidays
+                .Where(x => x.Month == month)
+                .Where(x => x.Year == year)
+                .AsNoTracking()
+                .ToListAsync();
+            int total = 0;
+            foreach (var item  in totalDay)
+            {
+                total += item.TotalDay;
+            }
+            return total;
+        }
+
         public async Task<HolidayRes> UpdateHolidayAsync(int id, HolidayCreateReq req)
         {
             var holiday = await _holidayRepository.GetByIdAsync(id);
@@ -92,13 +108,13 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 throw new NotFoundException("Holiday not found");
             }
-           holiday.Name = req.Name;
-            holiday.Date = req.Date;
+            holiday.Name = req.Name;
+            holiday.TotalDay = req.TotalDay;
             holiday.Description = req.Description;
             holiday.Month = req.Month;
-            holiday.IsPaidHoliday = req.IsPaidHoliday;
-            holiday.AllowWork = req.AllowWork;
-            holiday.SalaryCoefficient = req.SalaryCoefficient;
+            holiday.Year = req.Year;
+            holiday.FromDate = req.FromDate;
+            holiday.ToDate = req.ToDate;
             _holidayRepository.Update(holiday);
             await _holidayRepository.SaveAsync();
             return _holidayMapping.ToHolidayRes(holiday);

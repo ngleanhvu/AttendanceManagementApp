@@ -8,6 +8,7 @@
         // Quan hệ
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
+        public decimal Insurance { get; set; }
 
         // Thông tin công
         public int TotalWorkingDaysInMonth { get; set; }
@@ -24,7 +25,6 @@
 
         // Thuế + bảo hiểm
         public decimal Tax { get; set; }
-        public decimal Insurance { get; set; }
 
         // Tổng
         public decimal GrossSalary { get; set; }

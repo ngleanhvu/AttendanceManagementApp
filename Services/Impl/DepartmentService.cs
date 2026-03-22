@@ -54,6 +54,7 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var queryable = _context.Departments
                 .AsNoTracking()
+                .Where(x => x.Status == true)
                 .ApplySearch(query.Search, x => x.Name)
                 .ApplySorting(query.SortBy, query.Desc);
 

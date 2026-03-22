@@ -6,16 +6,14 @@ namespace AttendanceManagementApp.DTOs.Request
     {
         [Required(ErrorMessage = "Name is required")]
         public string Name { get; set; }
-        public DateOnly? Date { get; set; }
+        public int TotalDay { get; set; }
         [Required(ErrorMessage = "Description is required")]
         public string Description { get; set; }
         [Required(ErrorMessage = "Month is required")]
         public int Month { get; set; }
         [Required(ErrorMessage = "IsPaidHoliday is required")]
-        public bool IsPaidHoliday { get; set; } = true;
-        [Required(ErrorMessage = "AllowWork is required")]
-        public bool AllowWork { get; set; } = false;
-        [Required(ErrorMessage = "SalaryCoefficient is required")]
-        public decimal SalaryCoefficient { get; set; } = 3.0m;
+        public int Year { get; set; }
+        public DateOnly? FromDate { get; set; }
+        public DateOnly? ToDate { get; set; }
     }
 }

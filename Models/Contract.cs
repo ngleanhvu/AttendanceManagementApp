@@ -11,13 +11,13 @@ namespace AttendanceManagementApp.Models
         public ContractType ContractType { get; set; }
         [Required]
         public DateOnly StartDate { get; set; }
-        public DateOnly? EndDate { get; set; }
+        public DateOnly EndDate { get; set; }
         public decimal BaseSalary { get; set; }
-        public decimal? AllowanceLunchBreak { get; set; }
-        public decimal? AllowancePark {  get; set; }
-    
+        public decimal AllowanceLunchBreak { get; set; }
+        public decimal AllowancePark {  get; set; }
+        public decimal OverTimeRate { get; set; }
         public int TotalLeavingsPerMonth { get; set; }
-        public decimal? Tax {  get; set; }
+        public decimal Tax {  get; set; }
         public int WorkingPerMonth { get; set; }
         public ContractStatus ContractStatus { get; set; }
         public string? Description { get; set; }

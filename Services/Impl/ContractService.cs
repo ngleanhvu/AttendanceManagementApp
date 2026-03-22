@@ -64,6 +64,7 @@ namespace AttendanceManagementApp.Services.Impl
                 AllowanceLunchBreak = req.AllowanceLunchBreak,
                 AllowancePark = req.AllowancePark,
                 Tax = req.Tax,
+                OverTimeRate = req.OverTimeRate,
                 TotalLeavingsPerMonth = req.TotalLeavingsPerMonth,
             };
             await _contractRepository.AddAsync(contract);
@@ -116,6 +117,7 @@ namespace AttendanceManagementApp.Services.Impl
             var pagable = _context.Contracts
                 .AsNoTracking()
                 .Where(c => c.EmployeeId == employeeId)
+                .Where(c => c.Status == true)
                 .ApplySearch(query.Search, c => c.ContractNumber,
                                    c => c.ContractType.ToString(),
                                    c => c.ContractStatus.ToString())
@@ -152,6 +154,7 @@ namespace AttendanceManagementApp.Services.Impl
             contract.ContractStatus = (Models.Enum.ContractStatus)req.ContractStatus;
             contract.Description = req.Description;
             contract.SignedBy = req.SignedBy;
+            contract.OverTimeRate = req.OverTimeRate;
             contract.SignedDate = req.SignedDate;
 
             _contractRepository.Update(contract);

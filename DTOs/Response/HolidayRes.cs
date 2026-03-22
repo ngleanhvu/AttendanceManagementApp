@@ -4,11 +4,11 @@
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public DateOnly? Date { get; set; }
+        public int TotalDay { get; set; }
         public string Description { get; set; }
         public int Month { get; set; }
-        public bool IsPaidHoliday { get; set; } = true;
-        public bool AllowWork { get; set; } = false;
-        public decimal SalaryCoefficient { get; set; } = 3.0m;
+        public int Year { get; set; }
+        public DateOnly? FromDate { get; set; }
+        public DateOnly? ToDate { get; set; }
     }
 }

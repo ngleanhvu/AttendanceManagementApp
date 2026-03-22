@@ -11,5 +11,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<HolidayRes> GetHolidayAsync(int id);
         Task<PagedResult<HolidayRes>> GetHolidaysAsync(PaginationQuery query);
         Task<HolidayRes> SoftDeleteHolidayAsync(int id);
+        Task<int> TotalHolidayAsync(int month, int year);
     }
 }

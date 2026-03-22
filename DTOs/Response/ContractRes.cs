@@ -22,5 +22,6 @@ namespace AttendanceManagementApp.DTOs.Response
         public EmployeeRes? Employee { get; set; }
         public decimal? Tax { get; set; }
         public int TotalLeavingsPerMonth { get; set; }
+        public decimal? OverTimeRate { get; set; }
     }
 }

@@ -17,6 +17,7 @@ namespace AttendanceManagementApp.Configs
         public DbSet<LeaveType> LeaveTypes { get; set; }
         public DbSet<Position> Positions { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
+        public DbSet<OverTime> OverTimes { get; set; }
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<Role> Roles { get; set; }

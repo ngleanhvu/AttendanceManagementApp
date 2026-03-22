@@ -38,5 +38,6 @@ namespace AttendanceManagementApp.DTOs.Request
         public decimal? AllowanceLunchBreak { get; set; }
         public decimal? Tax { get; set; }
         public int TotalLeavingsPerMonth { get; set; }
+        public decimal? OverTimeRate { get; set; }
     }
 }

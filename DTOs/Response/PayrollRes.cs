@@ -32,3 +32,4 @@ namespace AttendanceManagementApp.DTOs.Response
         public EmployeeRes Employee {  get; set; }
     }
 }
+

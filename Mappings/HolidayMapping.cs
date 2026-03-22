@@ -11,12 +11,12 @@ namespace AttendanceManagementApp.Mappings
             {
                 Id = holiday.Id,
                 Name = holiday.Name,
-                Date = holiday.Date != null ? holiday.Date : null,
+                TotalDay = holiday.TotalDay,
                 Description = holiday.Description,
                 Month = holiday.Month,
-                IsPaidHoliday = holiday.IsPaidHoliday,
-                AllowWork = holiday.AllowWork,
-                SalaryCoefficient = holiday.SalaryCoefficient
+                Year = holiday.Year,
+                FromDate = holiday.FromDate,
+                ToDate = holiday.ToDate,
             };
         }
     }

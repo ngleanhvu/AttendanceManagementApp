@@ -35,6 +35,7 @@ namespace AttendanceManagementApp.Mappings
                 SignedDate = contract.SignedDate,
                 Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,
                 TotalLeavingsPerMonth = contract.TotalLeavingsPerMonth,
+                OverTimeRate = contract.OverTimeRate,
             };
         }
     }

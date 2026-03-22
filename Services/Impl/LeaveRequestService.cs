@@ -34,10 +34,38 @@ namespace AttendanceManagementApp.Services.Impl
             _leaveTypeService = leaveTypeService;
         }
 
+        public async Task<int> CalculateTotalLeavingAsync(int employeeId, int month, int year)
+        {
+            var startOfMonth = new DateTime(year, month, 1);
+            var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
+
+            var pageable = _appDbContext.LeaveRequests
+                .Where(x => x.Status == true)
+                .Where(x => x.LeaveStatus == LeaveStatus.Approved)
+                .Where(x => x.FromDate <= endOfMonth && x.ToDate >= startOfMonth)
+                .AsNoTracking();
+            int count = 0;
+            var items = await pageable.ToListAsync();
+
+            foreach (var item in items)
+            {
+                var actualFrom = item.FromDate < startOfMonth ? startOfMonth : item.FromDate;
+                var actualTo = item.ToDate > endOfMonth ? endOfMonth : item.ToDate;
+
+                count += (actualTo.Date - actualFrom.Date).Days + 1;
+            }
+
+            return count;
+        }
+
         public async Task<LeaveRequestRes> CreateLeaveRequestAsync(LeaveRequestCreateReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
             var leaveType = await _leaveTypeService.GetLeaveTypeByIdAsync(employee.Id);
+            if (req.FromDate > req.ToDate)
+            {
+                throw new BadRequestException("From date > To date");
+            }
             var leaveRequest = new LeaveRequest
             {
                 FromDate = req.FromDate,
@@ -59,6 +87,7 @@ namespace AttendanceManagementApp.Services.Impl
             var pageable = _appDbContext.LeaveRequests
                 .Include(x => x.Employee)
                 .Include(x => x.LeaveType)
+                .Where(x => x.Status == true)
                 .AsNoTracking()
                 .AsQueryable();
             

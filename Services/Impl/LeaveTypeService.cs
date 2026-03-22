@@ -55,6 +55,7 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pageable = _appDbContext.LeaveTypes
                  .AsNoTracking()
+                 .Where(x => x.Status == true)
                  .ApplySearch(query.Search, s => s.Name, s => s.Description)
                  .ApplySorting(query.SortBy, query.Desc);
             var count = await pageable.CountAsync();

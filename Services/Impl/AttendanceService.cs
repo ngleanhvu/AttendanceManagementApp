@@ -22,14 +22,16 @@ namespace AttendanceManagementApp.Services.Impl
         private readonly IRepository<Attendance> _attendanceRepository;
         private readonly AppDbContext _appDbContext;
         private readonly AttendanceMapping _attendanceMapping;
+        private readonly IOvertimeService _overtimeSerivce;
         public AttendanceService(IEmployeeService employeeService,
             IRepository<Attendance> attendanceRepository, AppDbContext appDbContext,
-            AttendanceMapping attendanceMapping)
+            AttendanceMapping attendanceMapping, IOvertimeService overtimeSerivce)
         {
             this._employeeService = employeeService;
             this._appDbContext = appDbContext;
             this._attendanceRepository = attendanceRepository;
             this._attendanceMapping = attendanceMapping;
+            _overtimeSerivce = overtimeSerivce;
         }
         public async Task<AttendanceRes> CheckInAsync(AttendanceCheckInReq req)
         {
@@ -78,6 +80,7 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pageable = _appDbContext.Attendances
                     .AsNoTracking()
+                    .Where(x => x.Status == true)
                     .Include(x => x.Employee)
                     .AsQueryable();
 
@@ -123,64 +126,62 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<AttendanceWorkloadRes> GetAttendanceWorkloadAsync(int employeeId, int month, int year)
         {
-            int totalWorkingDays = 0;
-            double overtimeWorkingHours = 0;
-            int totalCheckInLate = 0;
+                int totalWorkingDays = 0;
+                double overtimeWorkingHours = 0;
+                int totalCheckInLate = 0;
 
-            var filter = new AttendanceFilterReq
-            {
-                EmployeeId = employeeId,
-                Month = month,
-                Year = year
-            };
+                var filter = new AttendanceFilterReq
+                {
+                    EmployeeId = employeeId,
+                    Month = month,
+                    Year = year
+                };
 
-            var query = new PaginationQuery
-            {
-                PageSize = 32
-            };
+                var query = new PaginationQuery
+                {
+                    PageSize = 32
+                };
 
-            var res = await GetAttendancesAsync(filter, query);
+                var res = await GetAttendancesAsync(filter, query);
 
-            if (res?.Items == null || !res.Items.Any()) // ✅ Guard null/empty
-            {
+                if (res?.Items == null || !res.Items.Any()) // ✅ Guard null/empty
+                {
+                    return new AttendanceWorkloadRes
+                    {
+                        TotalWorkingDays = 0,
+                        TotalCheckInLates = 0,
+                        OvertimeWorkingHours = 0
+                    };
+                }
+
+                foreach (var item in res.Items)
+                {
+                    if (item.CheckIn.HasValue)
+                    {
+                        totalWorkingDays++;
+                    }
+
+                    if (item.AttendanceStatus == AttendanceStatus.LATE.ToString())
+                    {
+                        totalCheckInLate++;
+                    }
+
+                    // ✅ Chỉ tính OT khi checkout sau giờ chuẩn
+                    var standardCheckOutTime = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
+                    var existOverTime = await _overtimeSerivce.ExistOverTimeAsync(employeeId, item.WorkDate);
+                    // ✅ So sánh TimeOfDay
+                    if (existOverTime == true && item.CheckOut.HasValue && item.CheckOut.Value.TimeOfDay > standardCheckOutTime)
+                    {
+                        overtimeWorkingHours += (item.CheckOut.Value.TimeOfDay - standardCheckOutTime).TotalHours;
+                    }
+                }
+
                 return new AttendanceWorkloadRes
                 {
-                    TotalWorkingDays = 0,
-                    TotalCheckInLates = 0,
-                    OvertimeWorkingHours = 0
+                    TotalWorkingDays = totalWorkingDays,
+                    TotalCheckInLates = totalCheckInLate,
+                    OvertimeWorkingHours = (float)Math.Round(overtimeWorkingHours, 2)
                 };
-            }
-
-            var standardCheckOutTime = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
-
-            foreach (var item in res.Items)
-            {
-                if (item.CheckIn.HasValue)
-                {
-                    totalWorkingDays++;
-                }
-
-                if (item.AttendanceStatus == AttendanceStatus.LATE.ToString())
-                {
-                    totalCheckInLate++;
-                }
-
-                // ✅ Chỉ tính OT khi checkout sau giờ chuẩn
-                var standardCheckInTime = new TimeSpan(HOUR_CHECK_IN, MINUTE_CHECK_IN, 0);
-
-                // ✅ So sánh TimeOfDay
-                if (item.CheckIn.HasValue && item.CheckIn.Value.TimeOfDay > standardCheckInTime)
-                {
-                    totalCheckInLate++;
-                }
-            }
-
-            return new AttendanceWorkloadRes
-            {
-                TotalWorkingDays = totalWorkingDays,
-                TotalCheckInLates = totalCheckInLate,
-                OvertimeWorkingHours = (float)Math.Round(overtimeWorkingHours, 2)
-            };
         }
     }   
     }
