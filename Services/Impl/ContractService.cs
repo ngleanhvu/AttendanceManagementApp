@@ -1,13 +1,14 @@
 ﻿using AttendanceManagementApp.Configs;
 using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Exception;
 using AttendanceManagementApp.Mappings;
 using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
 using Microsoft.EntityFrameworkCore;
-using AttendanceManagementApp.Exception;
+
 
 namespace AttendanceManagementApp.Services.Impl
 {
@@ -39,17 +40,46 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 contractActive.ContractStatus = Models.Enum.ContractStatus.NOT_ACTIVE;
                 _contractRepository.Update(contractActive);
-            } 
+            }
             contract.ContractStatus = Models.Enum.ContractStatus.ACTIVE;
             _contractRepository.Update(contract);
             await _contractRepository.SaveAsync();
             return _contractMapping.ToContractRes(contract);
         }
 
+        public async Task<int> CalculateTotalLeavingBaseContractsAsync(int employeeId)
+        {
+            var contracts = await _context.Contracts
+                .Where(x => x.ContractStatus == Models.Enum.ContractStatus.ACTIVE 
+                || x.ContractStatus == Models.Enum.ContractStatus.EXPIRED)
+                .ToListAsync();
+
+            if (contracts == null || !contracts.Any())
+                return 0;
+
+            int totalDays = 0;
+
+            foreach (var c in contracts)
+            {
+                var end = c.EndDate == default
+                    ? DateOnly.FromDateTime(DateTime.Now)
+                    : c.EndDate;
+
+                if (end < c.StartDate)
+                    continue;
+
+                totalDays += (end.DayNumber - c.StartDate.DayNumber);
+            }
+
+            int totalYears = totalDays / 365;
+
+            return 12 + (totalYears / 12);
+        }
+
         public async Task<ContractRes> CreateContractAsync(ContractCreateReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
-            var contract = new Contract
+            var contract = new Models.Contract
             {
                 Employee = employee,
                 StartDate = req.StartDate,
@@ -58,7 +88,6 @@ namespace AttendanceManagementApp.Services.Impl
                 ContractNumber = req.ContractNumber,
                 ContractType = (Models.Enum.ContractType)req.ContractType,
                 Description = req.Description,
-                SignedBy = req.SignedBy,
                 SignedDate = req.SignedDate,
                 BaseSalary = req.BaseSalary,
                 AllowanceLunchBreak = req.AllowanceLunchBreak,
@@ -154,7 +183,6 @@ namespace AttendanceManagementApp.Services.Impl
             contract.Tax = req.Tax;
             contract.ContractStatus = (Models.Enum.ContractStatus)req.ContractStatus;
             contract.Description = req.Description;
-            contract.SignedBy = req.SignedBy;
             contract.OverTimeRate = req.OverTimeRate;
             contract.SignedDate = req.SignedDate;
 

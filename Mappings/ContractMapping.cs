@@ -31,7 +31,6 @@ namespace AttendanceManagementApp.Mappings
                 WorkingPerMonth = contract.WorkingPerMonth,
                 Status = contract.ContractStatus,
                 Description = contract.Description,
-                SignedBy = contract.SignedBy,
                 SignedDate = contract.SignedDate,
                 Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,
                 TotalLeavingsPerMonth = contract.TotalLeavingsPerMonth,

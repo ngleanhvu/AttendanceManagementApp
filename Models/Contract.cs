@@ -21,7 +21,6 @@ namespace AttendanceManagementApp.Models
         public int WorkingPerMonth { get; set; }
         public ContractStatus ContractStatus { get; set; }
         public string? Description { get; set; }
-        public string? SignedBy { get; set; }
         public DateOnly? SignedDate { get; set; }
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }

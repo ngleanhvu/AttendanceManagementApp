@@ -46,32 +46,42 @@ namespace AttendanceManagementApp.Services.Impl
             try
             {
                 var employees = await _employeeService.GetAllEmployeeAsync();
-
                 var payrolls = new List<Payroll>();
                 var payrollDetails = new List<PayrollDetail>();
 
                 foreach (var employee in employees)
                 {
-                    var (payroll, details) = await CalculatePayrollAsyncTest(employee.Id, req);
+                    // 1️⃣ Kiểm tra trùng payroll
+                    var existPayroll = await _appDbContext.Payrolls
+                        .AnyAsync(x => x.EmployeeId == employee.Id &&
+                                       x.Month == req.Month &&
+                                       x.Year == req.Year);
+                    if (existPayroll)
+                        continue; // Skip, idempotent
+
+                    // 2️⃣ Tính payroll chi tiết
+                    var (payroll, details) = await CalculatePayrollForEmployeeAsync(employee.Id, req);
 
                     payrolls.Add(payroll);
                     payrollDetails.AddRange(details);
                 }
 
-                await _appDbContext.Payrolls.AddRangeAsync(payrolls);
-                await _appDbContext.PayrollDetails.AddRangeAsync(payrollDetails);
-
-                await _appDbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
+                if (payrolls.Any())
+                {
+                    await _appDbContext.Payrolls.AddRangeAsync(payrolls);
+                    await _appDbContext.PayrollDetails.AddRangeAsync(payrollDetails);
+                    await _appDbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
             }
-            catch (IOException)
+            catch
             {
                 await transaction.RollbackAsync();
                 throw;
             }
         }
 
-        private async Task<(Payroll, List<PayrollDetail>)> CalculatePayrollAsyncTest(int employeeId, PayrollCalculateReq req)
+        private async Task<(Payroll, List<PayrollDetail>)> CalculatePayrollForEmployeeAsync(int employeeId, PayrollCalculateReq req)
         {
             var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
             var contract = await _contractService.GetContractActiveByEmployeeIdAsync(employeeId);
@@ -79,43 +89,54 @@ namespace AttendanceManagementApp.Services.Impl
             if (contract == null)
                 throw new NotFoundException("Contract not found");
 
-            var baseSalary = contract.BaseSalary;
-            var workingPerMonth = contract.WorkingPerMonth;
+            if (contract.BaseSalary <= 0 || contract.WorkingPerMonth <= 0)
+                throw new BadRequestException("Invalid contract data");
 
-            var baseSalaryPerDay = baseSalary / workingPerMonth;
+            // Lương cơ bản
+            var baseSalaryPerDay = contract.BaseSalary / contract.WorkingPerMonth;
             var baseSalaryPerHour = baseSalaryPerDay / 8;
 
-            var workload = await _attendanceService
-                .GetAttendanceWorkloadAsync(employeeId, req.Month, req.Year);
+            // Workload & leave
+            var workload = await _attendanceService.GetAttendanceWorkloadAsync(employeeId, req.Month, req.Year);
+            var totalLeavingRequest = await _leaveRequestService.CalculateTotalLeavingAsync(employeeId, req.Month, req.Year);
+            var paidLeaveDays = Math.Min((decimal)totalLeavingRequest, contract.TotalLeavingsPerMonth);
 
-            var totalLeavingRequest = await _leaveRequestService
-                .CalculateTotalLeavingAsync(employeeId, req.Month, req.Year);
+            var realSalary = (workload.TotalWorkingDays + paidLeaveDays) * baseSalaryPerDay;
 
-            var holiday = await _holidayService.TotalHolidayAsync(req.Month, req.Year);
+            // OT chỉ tính approved
+            var overtimeSalary = (decimal)workload.OvertimeWorkingHours * contract.OverTimeRate * baseSalaryPerHour;
 
-            var realSalary = (workload.TotalWorkingDays + (totalLeavingRequest <= contract.TotalLeavingsPerMonth
-                ? totalLeavingRequest : 0)) * baseSalaryPerDay;
+            // Ngày lễ
+            var holidayDays = await _holidayService.TotalHolidayAsync(req.Month, req.Year);
+            var holidaySalary = holidayDays * baseSalaryPerDay;
 
-            var overtimeSalary = (decimal)workload.OvertimeWorkingHours
-                                 * contract.OverTimeRate * baseSalaryPerHour;
-
+            // Trợ cấp
             var allowance = contract.AllowancePark + contract.AllowanceLunchBreak;
 
+            // Phạt đi trễ
             var deduction = workload.TotalCheckInLates * FINE_CHECK_IN_LATE_AMOUNT;
 
-            var gross = realSalary + overtimeSalary + allowance
-                        + holiday * baseSalaryPerDay - deduction;
+            // Gross
+            var gross = realSalary + overtimeSalary + holidaySalary + allowance - deduction;
 
-            var net = gross - contract.Tax * gross;
+            // Bảo hiểm (BHXH + BHYT + BHTN)
+            var insurance = Math.Round(gross * 0.105m, 0);
 
-            var now = DateTime.Now;
+            // Thuế (simple)
+            var taxableIncome = gross - insurance;
+            var taxAmount = Math.Round(taxableIncome * contract.Tax, 0);
+
+            // Net
+            var net = Math.Max(0, gross - insurance - taxAmount);
+
+            var now = DateTime.UtcNow;
 
             var payroll = new Payroll
             {
                 Month = req.Month,
                 Year = req.Year,
                 EmployeeId = employeeId,
-                Insurance = 0,
+                Insurance = insurance,
                 Tax = contract.Tax,
                 TotalWorkingDaysInMonth = contract.WorkingPerMonth,
                 ActualWorkingDays = workload.TotalWorkingDays,
@@ -124,65 +145,25 @@ namespace AttendanceManagementApp.Services.Impl
                 BasicSalary = realSalary,
                 Allowance = allowance,
                 Bonus = 0,
-                Holidays = holiday,
+                Holidays = holidayDays,
                 Deduction = deduction,
-                GrossSalary = gross,
+                GrossSalary = Math.Round(gross, 0),
                 NetSalary = net,
                 PayrollStatus = PayrollStatus.PENDING,
                 CreatedDate = now
             };
 
+            // Tạo chi tiết
             var details = new List<PayrollDetail>
-            {
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = $"Lương tháng {req.Month}/{req.Year}",
-                    Amount = realSalary,
-                    Type = PayrollDetailType.ERNING,
-                    CreatedDate = now
-                },
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = "Tăng ca",
-                    Amount = overtimeSalary,
-                    Type = PayrollDetailType.OVERTIME,
-                    CreatedDate = now
-                },
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = "Ngày lễ",
-                    Amount = holiday * baseSalaryPerDay,
-                    Type = PayrollDetailType.HOLIDAY,
-                    CreatedDate = now
-                },
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = "Trợ cấp gửi xe",
-                    Amount = contract.AllowancePark,
-                    Type = PayrollDetailType.ALLOWANCE,
-                    CreatedDate = now
-                },
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = "Trợ cấp ăn trưa",
-                    Amount = contract.AllowanceLunchBreak, // FIX BUG
-                    Type = PayrollDetailType.ALLOWANCE,
-                    CreatedDate = now
-                },
-                new PayrollDetail
-                {
-                    Payroll = payroll,
-                    Description = "Phạt đi trễ",
-                    Amount = deduction,
-                    Type = PayrollDetailType.DEDUCTION,
-                    CreatedDate = now
-                }
-            };
+    {
+        new PayrollDetail { Payroll = payroll, Description = $"Lương tháng {req.Month}/{req.Year}", Amount = realSalary, Type = PayrollDetailType.ERNING, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Tăng ca", Amount = overtimeSalary, Type = PayrollDetailType.OVERTIME, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Ngày lễ", Amount = holidaySalary, Type = PayrollDetailType.HOLIDAY, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Trợ cấp", Amount = allowance, Type = PayrollDetailType.ALLOWANCE, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Bảo hiểm", Amount = insurance, Type = PayrollDetailType.DEDUCTION, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Thuế", Amount = taxAmount, Type = PayrollDetailType.DEDUCTION, CreatedDate = now },
+        new PayrollDetail { Payroll = payroll, Description = "Phạt đi trễ", Amount = deduction, Type = PayrollDetailType.DEDUCTION, CreatedDate = now }
+    };
 
             return (payroll, details);
         }

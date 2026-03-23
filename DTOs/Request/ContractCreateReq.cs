@@ -24,11 +24,7 @@ namespace AttendanceManagementApp.DTOs.Request
 
         [Required(ErrorMessage = "Contract status is required")]
         public int ContractStatus { get; set; }
-
         public string Description { get; set; }
-
-        public string SignedBy { get; set; }
-
         [Required(ErrorMessage = "Signed date is required")]
         public DateOnly? SignedDate { get; set; }
 

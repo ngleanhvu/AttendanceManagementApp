@@ -18,20 +18,24 @@ namespace AttendanceManagementApp.Services.Impl
         public readonly int MINUTE_CHECK_IN = 30;
         public readonly int HOUR_CHECK_OUT = 17;
         public readonly int MINUTE_CHECK_OUT = 30;
+        public readonly int HOUR_CHECK_IN_PM = 1;
         private readonly IEmployeeService _employeeService;
         private readonly IRepository<Attendance> _attendanceRepository;
         private readonly AppDbContext _appDbContext;
         private readonly AttendanceMapping _attendanceMapping;
         private readonly IOvertimeService _overtimeSerivce;
+        private readonly ILeaveRequestService _leaveRequestService;
         public AttendanceService(IEmployeeService employeeService,
             IRepository<Attendance> attendanceRepository, AppDbContext appDbContext,
-            AttendanceMapping attendanceMapping, IOvertimeService overtimeSerivce)
+            AttendanceMapping attendanceMapping, IOvertimeService overtimeSerivce,
+            ILeaveRequestService leaveRequestService)
         {
             this._employeeService = employeeService;
             this._appDbContext = appDbContext;
             this._attendanceRepository = attendanceRepository;
             this._attendanceMapping = attendanceMapping;
             _overtimeSerivce = overtimeSerivce;
+            _leaveRequestService = leaveRequestService;
         }
         public async Task<AttendanceRes> CheckInAsync(AttendanceCheckInReq req)
         {
@@ -39,19 +43,56 @@ namespace AttendanceManagementApp.Services.Impl
             var now = DateTime.Now;
             var today = DateOnly.FromDateTime(now);
 
-            // ✅ Check đã chấm công chưa
+            // Rule: thời gian hợp lệ
+            if (now.TimeOfDay < new TimeSpan(6, 0, 0))
+                throw new BadRequestException("Too early to check in");
+
+            if (now.TimeOfDay > new TimeSpan(12, 0, 0))
+                throw new BadRequestException("Too late to check in");
+
+            // Rule: weekend
+            if (today.DayOfWeek == DayOfWeek.Saturday || today.DayOfWeek == DayOfWeek.Sunday)
+                throw new BadRequestException("Cannot check in on weekend");
+
+            // Rule: đã check-in
             var existAttendance = await _appDbContext.Attendances
                 .AnyAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
 
             if (existAttendance)
                 throw new BadRequestException("Employee already checked in today");
+
+            // Rule: leave request
+            var res = await _leaveRequestService.GetLeaveRequestsAsync(
+                new LeaveRequestFilterReq
+                {
+                    FromDate = now,
+                    ToDate = now,
+                    EmployeeId = employee.Id
+                },
+                new PaginationQuery { PageSize = 1 });
+
+            var leaveRequest = res.Items.FirstOrDefault();
+
+            if (leaveRequest != null)
+            {
+                if (leaveRequest.LeaveRequestType == (int)LeaveRequestType.FULLDAY)
+                    throw new BadRequestException("Today is leave day");
+
+                if (leaveRequest.LeaveRequestType == (int)LeaveRequestType.PART_DAY_AM)
+                    throw new BadRequestException("Morning is leave");
+
+                if (leaveRequest.LeaveRequestType == (int)LeaveRequestType.PART_DAY_PM &&
+                    now.TimeOfDay < new TimeSpan(13, 0, 0))
+                    throw new BadRequestException("Check-in allowed only in afternoon");
+            }
+
             var standardTime = new TimeSpan(HOUR_CHECK_IN, MINUTE_CHECK_IN, 0);
             bool isLate = now.TimeOfDay > standardTime;
 
             var attendance = new Attendance
             {
                 WorkDate = today,
-                CheckIn = DateTime.Now,
+                CheckIn = now,
                 Employee = employee,
                 AttendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT
             };
@@ -75,7 +116,6 @@ namespace AttendanceManagementApp.Services.Impl
             return _attendanceMapping.ToAttendanceRes(attendance);
         }
 
-        [HttpGet]
         public async Task<PagedResult<AttendanceRes>> GetAttendancesAsync(AttendanceFilterReq req, PaginationQuery query)
         {
             var pageable = _appDbContext.Attendances
@@ -144,7 +184,7 @@ namespace AttendanceManagementApp.Services.Impl
 
                 var res = await GetAttendancesAsync(filter, query);
 
-                if (res?.Items == null || !res.Items.Any()) // ✅ Guard null/empty
+                if (res?.Items == null || !res.Items.Any()) // Guard null/empty
                 {
                     return new AttendanceWorkloadRes
                     {

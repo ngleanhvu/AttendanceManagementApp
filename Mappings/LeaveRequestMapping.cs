@@ -1,37 +1,44 @@
 ﻿using AttendanceManagementApp.DTOs.Response;
+using AttendanceManagementApp.Mappings;
 using AttendanceManagementApp.Models;
 
-namespace AttendanceManagementApp.Mappings
+public class LeaveRequestMapping
 {
-    public class LeaveRequestMapping
+    private readonly EmployeeMapping _employeeMapping;
+    private readonly LeaveTypeMapping _leaveTypeMapping;
+
+    public LeaveRequestMapping(EmployeeMapping employeeMapping, LeaveTypeMapping leaveTypeMapping)
     {
-        private readonly EmployeeMapping _employeeMapping;
-        private readonly LeaveTypeMapping _leaveTypeMapping;
+        _employeeMapping = employeeMapping;
+        _leaveTypeMapping = leaveTypeMapping;
+    }
 
-        public LeaveRequestMapping(EmployeeMapping employeeMapping, LeaveTypeMapping leaveTypeMapping)
-        {
-            this._employeeMapping = employeeMapping;
-            this._leaveTypeMapping = leaveTypeMapping;
-        }
+    public LeaveRequestRes ToLeaveRequestRes(
+        LeaveRequest req,
+        int totalLeavingRequest,
+        float leavedDays)
+    {
+        if (req == null)
+            return null;
 
-        public LeaveRequestRes ToLeaveRequestRes(LeaveRequest req)
+        return new LeaveRequestRes
         {
-            if (req == null)
-                return null;
-            return new LeaveRequestRes
-            {
-                Id = req.Id,
-                FromDate = req.FromDate,
-                ToDate = req.ToDate,
-                TotalDays = req.TotalDays,
-                Reason = req.Reason,
-                RejectReason = req.RejectReason,
-                LeaveStatus = req.LeaveStatus.ToString(),
-                Employee = _employeeMapping.ToEmployeeRes(req.Employee),
-                LeaveType = _leaveTypeMapping.ToLeaveTypeRes(req.LeaveType),
-                CreatedDate = req.CreatedDate,
-                ApprovedDate = req.ApprovedDate,
-            };
-        }
+            Id = req.Id,
+            FromDate = req.FromDate,
+            ToDate = req.ToDate,
+            TotalDays = req.TotalDays,
+            Reason = req.Reason,
+            RejectReason = req.RejectReason,
+            LeaveStatus = req.LeaveStatus.ToString(),
+            Employee = _employeeMapping.ToEmployeeRes(req.Employee),
+            LeaveType = _leaveTypeMapping.ToLeaveTypeRes(req.LeaveType),
+            CreatedDate = req.CreatedDate,
+            ApprovedDate = req.ApprovedDate,
+            LeaveRequestType = (int)req.LeaveRequestType,
+
+            // truyền từ ngoài vào
+            TotalLeavingRequest = totalLeavingRequest,
+            LeavedDays = leavedDays
+        };
     }
 }

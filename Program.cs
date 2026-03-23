@@ -1,10 +1,12 @@
 using AttendanceManagementApp.Configs;
+using AttendanceManagementApp.Cronjob;
 using AttendanceManagementApp.Mappings;
 using AttendanceManagementApp.Middlewares;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Impl;
 using AttendanceManagementApp.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +54,31 @@ builder.Services.Configure<CloudinaryConfig>(
 );
 
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
+
+// Job
+builder.Services.AddQuartz(q =>
+{
+    var contactExpiredStatusChangeKey = new JobKey("ContactExpiredStatusKey");
+    var payrollCalKey = new JobKey("PayrollCalKey");
+
+    q.AddJob<ContractChangeExpiredStatusJob>(opts => opts.WithIdentity(contactExpiredStatusChangeKey));
+    q.AddJob<PayrollJob>(opts => opts.WithIdentity(payrollCalKey));
+
+    q.AddTrigger(opts => opts
+        .ForJob(contactExpiredStatusChangeKey)
+        .WithIdentity("ContactExpiredStatus-trigger")
+        .WithCronSchedule("0 0 8 * * ?")
+    );
+
+    q.AddTrigger(opts => opts
+       .ForJob(payrollCalKey)
+       .WithIdentity("PayrollJob-trigger")
+       .WithCronSchedule("0 0 2 1 * ?") // 2h sáng ngày 1 mỗi tháng
+   );
+
+});
+
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
 var app = builder.Build();
 

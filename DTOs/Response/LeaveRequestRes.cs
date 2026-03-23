@@ -15,5 +15,8 @@ namespace AttendanceManagementApp.DTOs.Response
         public string? RejectReason { get; set; }
         public EmployeeRes Employee { get; set; }
         public LeaveTypeRes LeaveType { get; set; }
+        public int LeaveRequestType { get; set; }
+        public int TotalLeavingRequest {  get; set; }
+        public float LeavedDays { get; set; }
     }
 }

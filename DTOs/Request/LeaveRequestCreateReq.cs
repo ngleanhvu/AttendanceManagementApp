@@ -7,5 +7,6 @@
         public string Reason { get; set; }
         public int EmployeeId { get; set; }
         public int LeaveTypeId { get; set; }
+        public int LeaveRequestTypeId { get; set; }
     }
 }

@@ -15,5 +15,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<ContractRes> UpdateContractStatusAsync(int id, int contractStatus);
         Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId);
         Task<ContractRes> ActiveContractByEmployeeIdAsync(int contractId, int employeeId);
+        Task<int> CalculateTotalLeavingBaseContractsAsync(int employeeId);
     }
 }
