@@ -1,6 +1,6 @@
 ﻿namespace AttendanceManagementApp.Services.Interface
 {
-    public interface IUserService
+    public interface IAccountService
     {
     }
 }

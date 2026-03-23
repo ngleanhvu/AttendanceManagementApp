@@ -1,7 +1,9 @@
-﻿using AttendanceManagementApp.DTOs.Request;
+﻿using AttendanceManagementApp.Configs;
+using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AttendanceManagementApp.Controllers
@@ -17,6 +19,7 @@ namespace AttendanceManagementApp.Controllers
             _employeeService = employeeService;
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] EmployeeCreateReq req)
         {
@@ -24,6 +27,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<EmployeeRes>(employee));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromForm] EmployeeUpdateReq req)
         {
@@ -38,6 +42,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<EmployeeDetailRes>(employee));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {
@@ -45,6 +50,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<PagedResult<EmployeeRes>>(employees));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDelete(int id)
         {

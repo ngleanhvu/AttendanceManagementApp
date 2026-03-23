@@ -20,8 +20,7 @@ namespace AttendanceManagementApp.Configs
         public DbSet<OverTime> OverTimes { get; set; }
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
-        public DbSet<Role> Roles { get; set; }
-        public DbSet<User> Users { get; set; }
+        public DbSet<Account> Accounts  { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

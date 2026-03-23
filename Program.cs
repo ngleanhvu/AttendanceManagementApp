@@ -5,15 +5,19 @@ using AttendanceManagementApp.Middlewares;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Impl;
 using AttendanceManagementApp.Services.Interface;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Quartz;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers();
+// ======================
+// Add services
+// ======================
 
-// OpenAPI
+builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 // DbContext
@@ -33,7 +37,7 @@ builder.Services.AddScoped<LeaveRequestMapping>();
 builder.Services.AddScoped<OvertimeMapping>();
 builder.Services.AddScoped<PayrollMapping>();
 
-// Repositories
+// Repository
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Services
@@ -47,15 +51,46 @@ builder.Services.AddScoped<ILeaveTypeService, LeaveTypeService>();
 builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IOvertimeService, OvertimeService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
-// Cloudinary config
+// Cloudinary
 builder.Services.Configure<CloudinaryConfig>(
     builder.Configuration.GetSection("Cloudinary")
 );
-
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 
-// Job
+// ======================
+// JWT CONFIG (🔥 PHẢI Ở ĐÂY)
+// ======================
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key missing");
+var key = Encoding.UTF8.GetBytes(keyString);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// ======================
+// Quartz Job
+// ======================
 builder.Services.AddQuartz(q =>
 {
     var contactExpiredStatusChangeKey = new JobKey("ContactExpiredStatusKey");
@@ -71,18 +106,24 @@ builder.Services.AddQuartz(q =>
     );
 
     q.AddTrigger(opts => opts
-       .ForJob(payrollCalKey)
-       .WithIdentity("PayrollJob-trigger")
-       .WithCronSchedule("0 0 2 1 * ?") // 2h sáng ngày 1 mỗi tháng
-   );
-
+        .ForJob(payrollCalKey)
+        .WithIdentity("PayrollJob-trigger")
+        .WithCronSchedule("0 0 2 1 * ?")
+    );
 });
 
 builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
 
+// ======================
+// Build app
+// ======================
 var app = builder.Build();
 
-// Global Exception Middleware
+// ======================
+// Middleware pipeline
+// ======================
+
+// Exception
 app.UseMiddleware<ExceptionMiddleware>();
 
 // OpenAPI
@@ -91,7 +132,9 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseAuthorization();
+// 🔥 QUAN TRỌNG
+app.UseAuthentication();  // xác thực JWT
+app.UseAuthorization();   // phân quyền
 
 app.MapControllers();
 

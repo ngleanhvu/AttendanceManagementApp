@@ -1,8 +1,10 @@
-﻿using AttendanceManagementApp.DTOs.Request;
+﻿using AttendanceManagementApp.Configs;
+using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AttendanceManagementApp.Controllers
@@ -18,6 +20,7 @@ namespace AttendanceManagementApp.Controllers
             _contractService = contractService;
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] ContractCreateReq req)
         {
@@ -25,6 +28,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<ContractRes>(contract));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] ContractCreateReq req)
         {
@@ -32,6 +36,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<ContractRes>(contract));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromQuery] int contractStatus)
         {
@@ -39,6 +44,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<ContractRes>(contract));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
         {
@@ -46,6 +52,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
         }
 
+        [Authorize]
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
@@ -53,6 +60,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<ContractRes>(contract));
         }
 
+        [Authorize]
         [HttpGet("employees/{employeeId}")]
         public async Task<IActionResult> GetByEmployeeId(int employeeId, [FromQuery] PaginationQuery query)
         {
@@ -60,6 +68,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPatch("active/{id}/employees/{employeeId}")]
         public async Task<IActionResult> ActiveContract(int id, int employeeId)
         {

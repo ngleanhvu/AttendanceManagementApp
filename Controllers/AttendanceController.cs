@@ -2,6 +2,7 @@
 using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,6 +33,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<AttendanceRes>(checkOut));
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromBody] AttendanceFilterReq filter, [FromQuery] PaginationQuery query)
         {

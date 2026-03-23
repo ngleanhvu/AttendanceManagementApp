@@ -21,11 +21,12 @@ namespace AttendanceManagementApp.Services.Impl
         private readonly IDepartmentService _departmentService;
         private readonly IPositionService _positionService;
         private readonly EmployeeMapping _employeeMapping;
+        private readonly IPasswordService _passwordService;
 
         public EmployeeService(AppDbContext context, ICloudinaryService cloudinaryService,
             IRepository<Employee> repo, IRepository<EmployeeDetail> detailRepository,
             IDepartmentService departmentService, IPositionService positionService,
-            EmployeeMapping employeeMapping)
+            EmployeeMapping employeeMapping, IPasswordService passwordService)
         {
             _context = context;
             _cloudinaryService = cloudinaryService;
@@ -34,6 +35,7 @@ namespace AttendanceManagementApp.Services.Impl
             _departmentService = departmentService;
             _positionService = positionService;
             _employeeMapping = employeeMapping;
+            _passwordService = passwordService;
         }
 
         public async Task<EmployeeRes> CreateEmployeeAsync(EmployeeCreateReq req)
@@ -67,12 +69,21 @@ namespace AttendanceManagementApp.Services.Impl
                 Position = position,
                 Employee = employee
             };
+            var account = new Account
+            {
+                Username = req.Email,
+                PasswordHash = _passwordService.Hash(req.IdentityNumber),
+                IsActive = false,
+                Position = position,
+                Employee = employee
+            };
             // 4. Transaction
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 await _repo.AddAsync(employee);
                 await _detailRepository.AddAsync(employeeDetail);
+                await _context.Accounts.AddAsync(account);
 
                 await _repo.SaveAsync();
 

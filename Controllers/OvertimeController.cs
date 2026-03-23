@@ -1,7 +1,9 @@
-﻿using AttendanceManagementApp.DTOs.Request;
+﻿using AttendanceManagementApp.Configs;
+using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AttendanceManagementApp.Controllers
@@ -17,6 +19,7 @@ namespace AttendanceManagementApp.Controllers
             _overtimeService = overtimeService;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] OvertimeCreateReq req)
         {
@@ -24,6 +27,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<OvertimeRes>(res));
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update([FromBody] OvertimeCreateReq req, int id)
         {
@@ -31,6 +35,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<OvertimeRes>(res));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromBody] OvertimeFilterReq filter, [FromQuery] PaginationQuery query)
         {
@@ -38,6 +43,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<PagedResult<OvertimeRes>>(res));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPatch("{id}")]
         public async Task<IActionResult> Approve(int id)
         { 
@@ -45,6 +51,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<OvertimeRes>(res));
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDelete(int id)
         {

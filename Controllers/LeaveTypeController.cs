@@ -1,8 +1,10 @@
-﻿using AttendanceManagementApp.DTOs.Request;
+﻿using AttendanceManagementApp.Configs;
+using AttendanceManagementApp.DTOs.Request;
 using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AttendanceManagementApp.Controllers
@@ -18,6 +20,7 @@ namespace AttendanceManagementApp.Controllers
             _leaveTypeService = leaveTypeService;
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] LeaveTypeCreateReq req)
         {
@@ -25,6 +28,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<LeaveTypeRes>(res));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
         {
@@ -32,6 +36,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<PagedResult<LeaveTypeRes>>(res));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] LeaveTypeCreateReq req)
         {
@@ -39,6 +44,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<LeaveTypeRes>(res));
         }
 
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
