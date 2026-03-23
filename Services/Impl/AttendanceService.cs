@@ -47,9 +47,6 @@ namespace AttendanceManagementApp.Services.Impl
             if (now.TimeOfDay < new TimeSpan(6, 0, 0))
                 throw new BadRequestException("Too early to check in");
 
-            if (now.TimeOfDay > new TimeSpan(12, 0, 0))
-                throw new BadRequestException("Too late to check in");
-
             // Rule: weekend
             if (today.DayOfWeek == DayOfWeek.Saturday || today.DayOfWeek == DayOfWeek.Sunday)
                 throw new BadRequestException("Cannot check in on weekend");

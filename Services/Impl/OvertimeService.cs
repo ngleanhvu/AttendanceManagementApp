@@ -36,17 +36,15 @@ namespace AttendanceManagementApp.Services.Impl
             if (overtime == null)
                 throw new NotFoundException("Overtime not found");
 
-            // 1. Chỉ approve khi chưa approve
             if (overtime.IsApproved)
                 throw new BadRequestException("Overtime already approved");
 
             var now = DateTime.Now;
 
-            // 2. Không approve OT trong quá khứ
             if (overtime.WorkDate < DateOnly.FromDateTime(now))
                 throw new BadRequestException("Cannot approve past overtime");
 
-            // 3. Check overlap với OT đã approve
+            // Check overlap with other approved OT
             var isOverlap = await _appDbContext.OverTimes.AnyAsync(x =>
                 x.Employee.Id == overtime.Employee.Id &&
                 x.Id != overtime.Id &&
@@ -58,7 +56,7 @@ namespace AttendanceManagementApp.Services.Impl
             if (isOverlap)
                 throw new BadRequestException("Overlaps with approved overtime");
 
-            // 4. Check attendance (phải có chấm công)
+            // Must have attendance
             var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
                 x.Employee.Id == overtime.Employee.Id &&
                 x.WorkDate == overtime.WorkDate);
@@ -66,32 +64,34 @@ namespace AttendanceManagementApp.Services.Impl
             if (!hasAttendance)
                 throw new BadRequestException("Must check-in before approving overtime");
 
-            // 5. Giới hạn OT theo ngày (sum lại)
-            var totalOtHours = await _appDbContext.OverTimes
+            // Calculate current OT duration
+            var currentHours = (overtime.To - overtime.From).TotalHours;
+
+            // Sum of already approved OT for that day (client-side evaluation)
+            var totalOtHours = _appDbContext.OverTimes
                 .Where(x => x.Employee.Id == overtime.Employee.Id &&
                             x.WorkDate == overtime.WorkDate &&
                             x.IsApproved)
-                .SumAsync(x => (x.To - x.From).TotalHours);
-
-            var currentHours = (overtime.To - overtime.From).TotalHours;
+                .AsEnumerable() // <-- force client-side to calculate TotalHours
+                .Sum(x => (x.To - x.From).TotalHours);
 
             if (totalOtHours + currentHours > 4)
                 throw new BadRequestException("Exceeded daily overtime limit");
 
-            // 6. Giới hạn OT theo tháng (optional)
-            var totalOtMonth = await _appDbContext.OverTimes
+            // Sum of already approved OT for the month
+            var totalOtMonth = _appDbContext.OverTimes
                 .Where(x => x.Employee.Id == overtime.Employee.Id &&
                             x.WorkDate.Month == overtime.WorkDate.Month &&
                             x.WorkDate.Year == overtime.WorkDate.Year &&
                             x.IsApproved)
-                .SumAsync(x => (x.To - x.From).TotalHours);
+                .AsEnumerable() // <-- client-side
+                .Sum(x => (x.To - x.From).TotalHours);
 
             if (totalOtMonth + currentHours > 40)
                 throw new BadRequestException("Exceeded monthly overtime limit");
 
-            // 7. Approve
+            // Approve OT
             overtime.IsApproved = true;
-
             _repository.Update(overtime);
             await _repository.SaveAsync();
 
@@ -121,10 +121,11 @@ namespace AttendanceManagementApp.Services.Impl
                 throw new BadRequestException("Max overtime per request is 4 hours");
 
             // 2. Không cho OT trong giờ hành chính
-            var workStart = new TimeSpan(8, 0, 0);
-            var workEnd = new TimeSpan(17, 0, 0);
 
-            if (req.From.CompareTo(workEnd) < 0 && req.To.CompareTo(workStart) > 0)
+            var workStart = new TimeOnly(8, 30);
+            var workEnd = new TimeOnly(17, 30);
+
+            if (req.From < workEnd && req.To > workStart)
                 throw new BadRequestException("Overtime must be outside working hours");
 
             // 3. Check overlap (basic)
@@ -170,11 +171,11 @@ namespace AttendanceManagementApp.Services.Impl
                             && x.Status == true);
         }
 
-        public async Task<OverTime?> GetOverTimeByEmployeeIdAndWorkDateAsync(int employeeId, DateOnly workDate)
-        {
-            return await _appDbContext.OverTimes
-                .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.WorkDate == workDate && x.Status == true);
-        }
+            public async Task<OverTime?> GetOverTimeByEmployeeIdAndWorkDateAsync(int employeeId, DateOnly workDate)
+            {
+                return await _appDbContext.OverTimes
+                    .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.WorkDate == workDate && x.Status == true);
+            }
 
         public async Task<PagedResult<OvertimeRes>> GetOverTimesAsync(OvertimeFilterReq req, PaginationQuery query)
         {
