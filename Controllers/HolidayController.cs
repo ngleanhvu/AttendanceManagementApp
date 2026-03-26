@@ -39,7 +39,7 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {
             var result = await _holidayService.GetHolidaysAsync(query);
             return Ok(new ApiResponse<PagedResult<HolidayRes>>(result));

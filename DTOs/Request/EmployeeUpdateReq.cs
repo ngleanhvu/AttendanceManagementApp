@@ -10,7 +10,7 @@ namespace AttendanceManagementApp.DTOs.Request
         public bool Gender { get; set; }
         [Required(ErrorMessage = "Email is required")]
         public string Email { get; set; }
-        public IFormFile Thumbnail { get; set; }
+        public IFormFile? Thumbnail { get; set; }
         [Required(ErrorMessage = "Date of Birth is required")]
         public DateOnly DateOfBirth { get; set; }
         [Required(ErrorMessage = "Identity Number is required")]

@@ -2,9 +2,9 @@
 {
     public class ErrorResponse
     {
-        public bool Success { get; set; } = false;
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = "UNKNOWN_ERROR";
         public int StatusCode { get; set; }
-        public string ErrorCode { get; set; }
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     }
 }

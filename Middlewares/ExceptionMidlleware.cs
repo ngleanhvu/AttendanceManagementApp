@@ -1,6 +1,7 @@
 ﻿namespace AttendanceManagementApp.Middlewares
 {
     using AttendanceManagementApp.Exception;
+    using AttendanceManagementApp.Exceptions;
     using AttendanceManagementApp.Utils;
     using System.Net;
     using System.Text.Json;
@@ -8,17 +9,13 @@
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionMiddleware> _logger;
 
-        public ExceptionMiddleware(
-            RequestDelegate next,
-            ILogger<ExceptionMiddleware> logger)
+        public ExceptionMiddleware(RequestDelegate next)
         {
             _next = next;
-            _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext context)
+        public async Task Invoke(HttpContext context)
         {
             try
             {
@@ -26,53 +23,65 @@
             }
             catch (IOException ex)
             {
-                _logger.LogError(ex, ex.Message);
-
-                await HandleExceptionAsync(context, ex);
+                await HandleException(context, ex);
             }
-        }
+            }
 
-        private static Task HandleExceptionAsync(HttpContext context, IOException exception)
+        private async Task HandleException(HttpContext context, IOException ex)
         {
-            HttpStatusCode status;
-            string errorCode;
+            context.Response.ContentType = "application/json";
 
-            switch (exception)
+            int statusCode;
+            string errorCode;
+            string message;
+
+            switch (ex)
             {
-                case NotFoundException:
-                    status = HttpStatusCode.NotFound;
-                    errorCode = "NOT_FOUND";
+                case AppException appEx:
+                    statusCode = appEx.StatusCode;
+                    errorCode = appEx.ErrorCode;
+                    message = appEx.Message;
                     break;
 
-                case BadRequestException:
-                    status = HttpStatusCode.BadRequest;
-                    errorCode = "BAD_REQUEST";
+                case NotFoundException:
+                    statusCode = 404;
+                    errorCode = "NOT_FOUND";
+                    message = ex.Message;
                     break;
 
                 case UnauthorizedException:
-                    status = HttpStatusCode.Unauthorized;
+                    statusCode = 401;
                     errorCode = "UNAUTHORIZED";
+                    message = ex.Message;
+                    break;
+
+                case BadRequestException:
+                    statusCode = 400;
+                    errorCode = "BAD_REQUEST";
+                    message = ex.Message;
                     break;
 
                 default:
-                    status = HttpStatusCode.InternalServerError;
+                    statusCode = 500;
                     errorCode = "INTERNAL_SERVER_ERROR";
+                    message = "Đã xảy ra lỗi hệ thống";
                     break;
             }
 
+            context.Response.StatusCode = statusCode;
+
             var response = new ErrorResponse
             {
-                Message = exception.Message,
-                StatusCode = (int)status,
-                ErrorCode = errorCode
+                Message = message,
+                ErrorCode = errorCode,
+                StatusCode = statusCode
             };
 
-            var json = JsonSerializer.Serialize(response);
+            var apiResponse = ApiResponse<ErrorResponse>.ErrorResponse(message, response);
 
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)status;
+            var json = JsonSerializer.Serialize(apiResponse);
 
-            return context.Response.WriteAsync(json);
+            await context.Response.WriteAsync(json);
         }
     }
 }

@@ -19,7 +19,7 @@ namespace AttendanceManagementApp.Controllers
             _employeeService = employeeService;
         }
 
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        //[Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] EmployeeCreateReq req)
         {

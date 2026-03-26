@@ -30,7 +30,7 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {
             var positions = await _positionService.GetPositionsAsync(query);
             return Ok(new ApiResponse<PagedResult<PositionRes>>(positions));

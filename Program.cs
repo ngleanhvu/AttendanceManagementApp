@@ -52,6 +52,7 @@ builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IOvertimeService, OvertimeService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IPasswordService, PasswordService>();
 
 // Cloudinary
 builder.Services.Configure<CloudinaryConfig>(
@@ -65,6 +66,18 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var keyString = jwtSettings["Key"] ?? throw new Exception("JWT Key missing");
 var key = Encoding.UTF8.GetBytes(keyString);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -131,7 +144,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
+app.UseCors("AllowFrontend");
 // 🔥 QUAN TRỌNG
 app.UseAuthentication();  // xác thực JWT
 app.UseAuthorization();   // phân quyền
