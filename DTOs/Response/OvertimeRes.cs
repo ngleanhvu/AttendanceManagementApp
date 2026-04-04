@@ -7,7 +7,7 @@
         public TimeOnly From { get; set; }
         public TimeOnly To { get; set; }
         public string Reason { get; set; }
-        public bool IsApproved { get; set; }
+        public int IsApproved { get; set; }
         public EmployeeRes Employee { get; set; }
     }
 }

@@ -29,7 +29,7 @@ namespace AttendanceManagementApp.Mappings
                 Tax = contract.Tax,
                 AllowanceLunchBreak = contract.AllowanceLunchBreak,
                 WorkingPerMonth = contract.WorkingPerMonth,
-                Status = contract.ContractStatus,
+                ContractStatus = (int)contract.ContractStatus,
                 Description = contract.Description,
                 SignedDate = contract.SignedDate,
                 Employee = employee != null ? _employeeMapping.ToEmployeeRes(employee) : null,

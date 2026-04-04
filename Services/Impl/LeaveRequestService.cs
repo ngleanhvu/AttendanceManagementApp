@@ -149,7 +149,6 @@ namespace AttendanceManagementApp.Services.Impl
                 CreatedDate = DateTime.UtcNow,
                 LeaveStatus = LeaveStatus.Pending,
                 EmployeeId = employee.Id,
-                LeaveType = leaveType,
                 Reason = req.Reason.Trim(),
                 LeaveRequestType = (LeaveRequestType)req.LeaveRequestTypeId
             };
@@ -166,7 +165,6 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pageable = _appDbContext.LeaveRequests
                 .Include(x => x.Employee)
-                .Include(x => x.LeaveType)
                 .Where(x => x.Status == true)
                 .AsNoTracking()
                 .AsQueryable();
@@ -179,9 +177,6 @@ namespace AttendanceManagementApp.Services.Impl
 
             if (filter.EmployeeId.HasValue)
                 pageable = pageable.Where(x => x.EmployeeId == filter.EmployeeId);
-
-            if (filter.LeaveTypeId.HasValue)
-                pageable = pageable.Where(x => x.LeaveTypeId == filter.LeaveTypeId);
 
             if (filter.LeaveStatus.HasValue)
                 pageable = pageable.Where(x => x.LeaveStatus == (LeaveStatus)filter.LeaveStatus);
@@ -246,7 +241,6 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var leaveRequest = await _appDbContext.LeaveRequests
                 .Include(x => x.Employee)
-                .Include(x => x.LeaveType)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (leaveRequest == null)

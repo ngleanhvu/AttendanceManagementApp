@@ -16,5 +16,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId);
         Task<ContractRes> ActiveContractByEmployeeIdAsync(int contractId, int employeeId);
         Task<int> CalculateTotalLeavingBaseContractsAsync(int employeeId);
+        Task<ContractRes> SoftDeleteContractAsync(int id);
     }
 }

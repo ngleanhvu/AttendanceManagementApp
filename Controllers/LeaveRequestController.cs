@@ -45,7 +45,7 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] LeaveRequestFilterReq filter, [FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] LeaveRequestFilterReq filter, [FromQuery] PaginationQuery query)
         {
             var res = await _leaveRequestService.GetLeaveRequestsAsync(filter, query);
             return Ok(new ApiResponse<PagedResult<LeaveRequestRes>>(res));

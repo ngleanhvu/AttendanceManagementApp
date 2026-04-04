@@ -4,6 +4,6 @@
     {
         public int? EmployeeId { get; set; }
         public DateOnly? WorkDate {  get; set; }
-        public bool? IsApproved { get; set; }
+        public int? IsApproved { get; set; }
     }
 }

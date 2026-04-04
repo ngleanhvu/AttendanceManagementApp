@@ -18,7 +18,7 @@ namespace AttendanceManagementApp.Mappings
                 From = req.From,
                 To = req.To,
                 Reason = req.Reason,
-                IsApproved = req.IsApproved,
+                IsApproved =(int) req.OvertimeStatus,
                 WorkDate = req.WorkDate,
                 Employee = req.Employee != null ? _employeeMapping.ToEmployeeRes(req.Employee) : null
             };

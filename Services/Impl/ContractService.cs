@@ -123,6 +123,7 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var pagable = _context.Contracts
                 .AsNoTracking()
+                .Where(c => c.Status == true)
                 .ApplySearch(query.Search, c => c.ContractNumber,
                                    c => c.ContractType.ToString(),
                                    c => c.ContractStatus.ToString())
@@ -165,6 +166,17 @@ namespace AttendanceManagementApp.Services.Impl
             };
         }
 
+        public async Task<ContractRes> SoftDeleteContractAsync(int id)
+        {
+            var contract = await _contractRepository.GetByIdAsync(id);
+            if (contract == null)
+                throw new NotFoundException("Contract not found");
+            contract.Status = false;
+            _contractRepository.SoftDelete(contract);
+            await _contractRepository.SaveAsync();
+            return _contractMapping.ToContractRes(contract);
+        }
+
         public async Task<ContractRes> UpdateContractAsync(int id, ContractCreateReq req)
         {
             var contract = _context.Contracts
@@ -181,7 +193,6 @@ namespace AttendanceManagementApp.Services.Impl
             contract.AllowanceLunchBreak = req.AllowanceLunchBreak;
             contract.TotalLeavingsPerMonth = req.TotalLeavingsPerMonth;
             contract.Tax = req.Tax;
-            contract.ContractStatus = (Models.Enum.ContractStatus)req.ContractStatus;
             contract.Description = req.Description;
             contract.OverTimeRate = req.OverTimeRate;
             contract.SignedDate = req.SignedDate;

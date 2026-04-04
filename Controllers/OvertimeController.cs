@@ -37,17 +37,17 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] OvertimeFilterReq filter, [FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] OvertimeFilterReq filter, [FromQuery] PaginationQuery query)
         {
             var res = await _overtimeService.GetOverTimesAsync(filter, query);
             return Ok(new ApiResponse<PagedResult<OvertimeRes>>(res));
         }
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
-        [HttpPatch("{id}")]
-        public async Task<IActionResult> Approve(int id)
+        [HttpPatch("{id}/status/{status}")]
+        public async Task<IActionResult> Approve(int id, int status)
         { 
-            var res = await _overtimeService.ApprovedOverTimeAsync(id);
+            var res = await _overtimeService.ApprovedOverTimeAsync(id, status);
             return Ok(new ApiResponse<OvertimeRes>(res));
         }
 

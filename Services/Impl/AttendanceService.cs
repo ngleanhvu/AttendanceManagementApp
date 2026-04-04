@@ -209,7 +209,7 @@ namespace AttendanceManagementApp.Services.Impl
                         .GetOverTimeByEmployeeIdAndWorkDateAsync(employeeId, item.WorkDate);
 
                     if (overtime != null
-                        && overtime.IsApproved
+                        && overtime.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED
                         && item.CheckOut.HasValue)
                     {
                         var checkOutTime = item.CheckOut.Value.TimeOfDay;

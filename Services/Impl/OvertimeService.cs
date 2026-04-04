@@ -4,6 +4,7 @@ using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Exception;
 using AttendanceManagementApp.Mappings;
 using AttendanceManagementApp.Models;
+using AttendanceManagementApp.Models.Enum;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
@@ -27,7 +28,7 @@ namespace AttendanceManagementApp.Services.Impl
             _employeeService = employeeService;
         }
 
-        public async Task<OvertimeRes> ApprovedOverTimeAsync(int id)
+        public async Task<OvertimeRes> ApprovedOverTimeAsync(int id, int status)
         {
             var overtime = await _appDbContext.OverTimes
                 .Include(x => x.Employee)
@@ -36,66 +37,83 @@ namespace AttendanceManagementApp.Services.Impl
             if (overtime == null)
                 throw new NotFoundException("Overtime not found");
 
-            if (overtime.IsApproved)
+            if (overtime.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED)
                 throw new BadRequestException("Overtime already approved");
 
-            var now = DateTime.Now;
+            if (overtime.OvertimeStatus == Models.Enum.OvertimeStatus.REJECTED)
+                throw new BadRequestException("Overtime already rejected");
 
-            if (overtime.WorkDate < DateOnly.FromDateTime(now))
-                throw new BadRequestException("Cannot approve past overtime");
+            var newStatus = (Models.Enum.OvertimeStatus)status;
 
-            // Check overlap with other approved OT
-            var isOverlap = await _appDbContext.OverTimes.AnyAsync(x =>
-                x.Employee.Id == overtime.Employee.Id &&
-                x.Id != overtime.Id &&
-                x.WorkDate == overtime.WorkDate &&
-                x.IsApproved &&
-                ((overtime.From >= x.From && overtime.From < x.To) ||
-                 (overtime.To > x.From && overtime.To <= x.To)));
+            // ================== REJECT ==================
+            if (newStatus == Models.Enum.OvertimeStatus.REJECTED)
+            {
+                overtime.OvertimeStatus = Models.Enum.OvertimeStatus.REJECTED;
+                _repository.Update(overtime);
+                await _repository.SaveAsync();
 
-            if (isOverlap)
-                throw new BadRequestException("Overlaps with approved overtime");
+                return _overtimeMapping.ToOverTimeRes(overtime);
+            }
 
-            // Must have attendance
-            var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
-                x.Employee.Id == overtime.Employee.Id &&
-                x.WorkDate == overtime.WorkDate);
+            // ================== APPROVE ==================
+            if (newStatus == Models.Enum.OvertimeStatus.APPROVED)
+            {
+                var now = DateTime.Now;
 
-            if (!hasAttendance)
-                throw new BadRequestException("Must check-in before approving overtime");
+                if (overtime.WorkDate < DateOnly.FromDateTime(now))
+                    throw new BadRequestException("Cannot approve past overtime");
 
-            // Calculate current OT duration
-            var currentHours = (overtime.To - overtime.From).TotalHours;
+                // Check overlap
+                var isOverlap = await _appDbContext.OverTimes.AnyAsync(x =>
+                    x.Employee.Id == overtime.Employee.Id &&
+                    x.Id != overtime.Id &&
+                    x.WorkDate == overtime.WorkDate &&
+                    x.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED &&
+                    ((overtime.From >= x.From && overtime.From < x.To) ||
+                     (overtime.To > x.From && overtime.To <= x.To)));
 
-            // Sum of already approved OT for that day (client-side evaluation)
-            var totalOtHours = _appDbContext.OverTimes
-                .Where(x => x.Employee.Id == overtime.Employee.Id &&
-                            x.WorkDate == overtime.WorkDate &&
-                            x.IsApproved)
-                .AsEnumerable() // <-- force client-side to calculate TotalHours
-                .Sum(x => (x.To - x.From).TotalHours);
+                if (isOverlap)
+                    throw new BadRequestException("Overlaps with approved overtime");
 
-            if (totalOtHours + currentHours > 4)
-                throw new BadRequestException("Exceeded daily overtime limit");
+                // Must have attendance
+                var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
+                    x.Employee.Id == overtime.Employee.Id &&
+                    x.WorkDate == overtime.WorkDate);
 
-            // Sum of already approved OT for the month
-            var totalOtMonth = _appDbContext.OverTimes
-                .Where(x => x.Employee.Id == overtime.Employee.Id &&
-                            x.WorkDate.Month == overtime.WorkDate.Month &&
-                            x.WorkDate.Year == overtime.WorkDate.Year &&
-                            x.IsApproved)
-                .AsEnumerable() // <-- client-side
-                .Sum(x => (x.To - x.From).TotalHours);
+                if (!hasAttendance)
+                    throw new BadRequestException("Must check-in before approving overtime");
 
-            if (totalOtMonth + currentHours > 40)
-                throw new BadRequestException("Exceeded monthly overtime limit");
+                var currentHours = (overtime.To - overtime.From).TotalHours;
 
-            // Approve OT
-            overtime.IsApproved = true;
-            _repository.Update(overtime);
-            await _repository.SaveAsync();
+                var totalOtHours = _appDbContext.OverTimes
+                    .Where(x => x.Employee.Id == overtime.Employee.Id &&
+                                x.WorkDate == overtime.WorkDate &&
+                                x.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED)
+                    .AsEnumerable()
+                    .Sum(x => (x.To - x.From).TotalHours);
 
-            return _overtimeMapping.ToOverTimeRes(overtime);
+                if (totalOtHours + currentHours > 4)
+                    throw new BadRequestException("Exceeded daily overtime limit");
+
+                var totalOtMonth = _appDbContext.OverTimes
+                    .Where(x => x.Employee.Id == overtime.Employee.Id &&
+                                x.WorkDate.Month == overtime.WorkDate.Month &&
+                                x.WorkDate.Year == overtime.WorkDate.Year &&
+                                x.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED)
+                    .AsEnumerable()
+                    .Sum(x => (x.To - x.From).TotalHours);
+
+                if (totalOtMonth + currentHours > 40)
+                    throw new BadRequestException("Exceeded monthly overtime limit");
+
+                overtime.OvertimeStatus = Models.Enum.OvertimeStatus.APPROVED;
+                _repository.Update(overtime);
+                await _repository.SaveAsync();
+
+                return _overtimeMapping.ToOverTimeRes(overtime);
+            }
+
+            throw new BadRequestException("Invalid status");
         }
 
         public async Task<OvertimeRes> CreateOverTimeAsync(OvertimeCreateReq req)
@@ -154,7 +172,7 @@ namespace AttendanceManagementApp.Services.Impl
                 From = req.From,
                 To = req.To,
                 Reason = req.Reason.Trim(),
-                IsApproved = false
+                OvertimeStatus = Models.Enum.OvertimeStatus.PENDING,
             };
 
             await _repository.AddAsync(overtime);
@@ -182,11 +200,12 @@ namespace AttendanceManagementApp.Services.Impl
             var pagable = _appDbContext.OverTimes
                 .AsNoTracking()
                 .Where(x => x.Status == true)
+                .Include(x => x.Employee)
                 .AsQueryable();
 
             if (req.IsApproved.HasValue)
             {
-                pagable = pagable.Where(x => x.Status == req.IsApproved);
+                pagable = pagable.Where(x => x.OvertimeStatus == (OvertimeStatus) req.IsApproved);
             }
             if (req.EmployeeId.HasValue)
             {

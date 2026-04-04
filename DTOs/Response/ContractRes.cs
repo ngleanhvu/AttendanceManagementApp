@@ -15,7 +15,7 @@ namespace AttendanceManagementApp.DTOs.Response
         public decimal? AllowancePark { get; set; }
         public decimal? AllowanceLunchBreak { get; set; }
         public int WorkingPerMonth { get; set; }
-        public ContractStatus Status { get; set; }
+        public int ContractStatus { get; set; }
         public string? Description { get; set; }
         public string? SignedBy { get; set; }
         public DateOnly? SignedDate { get; set; }

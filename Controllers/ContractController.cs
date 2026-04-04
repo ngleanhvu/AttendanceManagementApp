@@ -46,7 +46,7 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {
             var contracts = await _contractService.GetContractsAsync(query);
             return Ok(new ApiResponse<PagedResult<ContractRes>>(contracts));
@@ -74,6 +74,14 @@ namespace AttendanceManagementApp.Controllers
         {
             var res = await _contractService.ActiveContractByEmployeeIdAsync(id, employeeId);
             return Ok(new ApiResponse<ContractRes>(res));
+        }
+
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> SoftDelete(int id)
+        {
+            var contract = await _contractService.SoftDeleteContractAsync(id);
+            return Ok(new ApiResponse<ContractRes>(contract));
         }
     }
 }

@@ -12,8 +12,6 @@
         public string? RejectReason { get; set; }
         public int EmployeeId { get; set; }
         public Employee Employee { get; set; }
-        public int LeaveTypeId { get; set; }
-        public LeaveType LeaveType { get; set; }
         public LeaveRequestType LeaveRequestType { get; set; }
     }
 
