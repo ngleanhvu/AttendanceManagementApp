@@ -21,7 +21,7 @@ namespace AttendanceManagementApp.Mappings
                 WorkDate = attendance.WorkDate,
                 CheckIn = attendance.CheckIn,
                 CheckOut = attendance.CheckOut,
-                AttendanceStatus = attendance.AttendanceStatus.ToString(),
+                AttendanceStatus = (int)attendance.AttendanceStatus,
                 Employee = attendance.Employee != null ? _employeeMapping.ToEmployeeRes(attendance.Employee) : null,
             };
         }

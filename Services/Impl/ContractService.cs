@@ -4,11 +4,11 @@ using AttendanceManagementApp.DTOs.Response;
 using AttendanceManagementApp.Exception;
 using AttendanceManagementApp.Mappings;
 using AttendanceManagementApp.Models;
+using AttendanceManagementApp.Models.Enum;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace AttendanceManagementApp.Services.Impl
 {
@@ -28,34 +28,44 @@ namespace AttendanceManagementApp.Services.Impl
             this._contractMapping = contractMapping;
         }
 
+        // ================= ACTIVE =================
         public async Task<ContractRes> ActiveContractByEmployeeIdAsync(int contractId, int employeeId)
         {
-            var contract = await _contractRepository.GetByIdAsync(contractId);
+            var contract = await _context.Contracts
+                .FirstOrDefaultAsync(c => c.Id == contractId && c.EmployeeId == employeeId);
+
             if (contract == null)
-            {
                 throw new NotFoundException("Contract not found");
-            }
-            var contractActive = await GetContractActiveByEmployeeIdAsync(employeeId);
-            if (contractActive != null)
+
+            if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
+                throw new BadRequestException("Contract is already active");
+
+            var currentActive = await _context.Contracts
+                .FirstOrDefaultAsync(c => c.EmployeeId == employeeId &&
+                    c.ContractStatus == Models.Enum.ContractStatus.ACTIVE);
+
+            if (currentActive != null)
             {
-                contractActive.ContractStatus = Models.Enum.ContractStatus.NOT_ACTIVE;
-                _contractRepository.Update(contractActive);
+                currentActive.ContractStatus = Models.Enum.ContractStatus.EXPIRED;
             }
+
             contract.ContractStatus = Models.Enum.ContractStatus.ACTIVE;
-            _contractRepository.Update(contract);
-            await _contractRepository.SaveAsync();
+
+            await _context.SaveChangesAsync();
+
             return _contractMapping.ToContractRes(contract);
         }
 
+        // ================= LEAVE =================
         public async Task<int> CalculateTotalLeavingBaseContractsAsync(int employeeId)
         {
             var contracts = await _context.Contracts
-                .Where(x => x.ContractStatus == Models.Enum.ContractStatus.ACTIVE 
-                || x.ContractStatus == Models.Enum.ContractStatus.EXPIRED)
+                .Where(c => c.EmployeeId == employeeId &&
+                    (c.ContractStatus == Models.Enum.ContractStatus.ACTIVE ||
+                     c.ContractStatus == Models.Enum.ContractStatus.EXPIRED))
                 .ToListAsync();
 
-            if (contracts == null || !contracts.Any())
-                return 0;
+            if (!contracts.Any()) return 0;
 
             int totalDays = 0;
 
@@ -65,20 +75,43 @@ namespace AttendanceManagementApp.Services.Impl
                     ? DateOnly.FromDateTime(DateTime.Now)
                     : c.EndDate;
 
-                if (end < c.StartDate)
-                    continue;
+                if (end < c.StartDate) continue;
 
                 totalDays += (end.DayNumber - c.StartDate.DayNumber);
             }
 
             int totalYears = totalDays / 365;
 
-            return 12 + (totalYears / 12);
+            // 12 ngày + mỗi 5 năm thêm 1 ngày
+            return 12 + (totalYears / 5);
         }
 
+        // ================= CREATE =================
         public async Task<ContractRes> CreateContractAsync(ContractCreateReq req)
         {
+            // validate
+            if (req.EndDate < req.StartDate)
+                throw new BadRequestException("EndDate must be after StartDate");
+
+            var exists = await _context.Contracts
+                .AnyAsync(c => c.ContractNumber == req.ContractNumber);
+
+            if (exists)
+                throw new BadRequestException("Contract number already exists");
+
+            // check overlap
+            var overlap = await _context.Contracts
+                .Where(c => c.EmployeeId == req.EmployeeId)
+                .AnyAsync(c =>
+                    req.StartDate <= c.EndDate &&
+                    req.EndDate >= c.StartDate
+                );
+
+            if (overlap)
+                throw new BadRequestException("Contract time overlaps existing contract");
+
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
+
             var contract = new Models.Contract
             {
                 Employee = employee,
@@ -97,28 +130,36 @@ namespace AttendanceManagementApp.Services.Impl
                 TotalLeavingsPerMonth = req.TotalLeavingsPerMonth,
                 WorkingPerMonth = req.WorkingPerMonth,
             };
+
             await _contractRepository.AddAsync(contract);
             await _contractRepository.SaveAsync();
 
             return _contractMapping.ToContractRes(contract);
         }
 
+        // ================= GET ACTIVE =================
         public async Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId)
         {
-            var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
-            var contractActive = await _context.Contracts.Where(x => x.Status == true).FirstAsync();
-            return contractActive;
+            return await _context.Contracts
+                .FirstOrDefaultAsync(c => c.EmployeeId == employeeId &&
+                    c.ContractStatus == ContractStatus.ACTIVE);
         }
 
+        // ================= GET ONE =================
         public async Task<ContractRes> GetContractAsync(int id)
         {
-            var contract = _context.Contracts
+            var contract = await _context.Contracts
                 .AsNoTracking()
                 .Include(c => c.Employee)
-                .FirstOrDefault(c => c.Id == id);
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (contract == null)
+                throw new NotFoundException("Contract not found");
+
             return _contractMapping.ToContractRes(contract);
         }
 
+        // ================= LIST =================
         public async Task<PagedResult<ContractRes>> GetContractsAsync(PaginationQuery query)
         {
             var pagable = _context.Contracts
@@ -128,11 +169,16 @@ namespace AttendanceManagementApp.Services.Impl
                                    c => c.ContractType.ToString(),
                                    c => c.ContractStatus.ToString())
                 .ApplySorting(query.SortBy, query.Desc);
+
             var total = await pagable.CountAsync();
-            var items = await pagable.ApplyPagination(query.Page, query.PageSize)
+
+            var items = await pagable
+                .ApplyPagination(query.Page, query.PageSize)
                 .Include(c => c.Employee)
                 .ToListAsync();
+
             var itemsRes = items.Select(c => _contractMapping.ToContractRes(c)).ToList();
+
             return new PagedResult<ContractRes>
             {
                 Total = total,
@@ -144,19 +190,24 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<PagedResult<ContractRes>> GetContractsByEmployeeIdAsync(int employeeId, PaginationQuery query)
         {
-            var employee = await _employeeService.GetEmployeeByIdAsync(employeeId);
+            await _employeeService.GetEmployeeByIdAsync(employeeId);
+
             var pagable = _context.Contracts
                 .AsNoTracking()
-                .Where(c => c.EmployeeId == employeeId)
-                .Where(c => c.Status == true)
+                .Where(c => c.EmployeeId == employeeId && c.Status == true)
                 .ApplySearch(query.Search, c => c.ContractNumber,
                                    c => c.ContractType.ToString(),
                                    c => c.ContractStatus.ToString())
                 .ApplySorting(query.SortBy, query.Desc);
+
             var total = await pagable.CountAsync();
-            var items = await pagable.ApplyPagination(query.Page, query.PageSize)
+
+            var items = await pagable
+                .ApplyPagination(query.Page, query.PageSize)
                 .ToListAsync();
+
             var itemsRes = items.Select(c => _contractMapping.ToContractRes(c)).ToList();
+
             return new PagedResult<ContractRes>
             {
                 Total = total,
@@ -166,24 +217,56 @@ namespace AttendanceManagementApp.Services.Impl
             };
         }
 
+        // ================= DELETE =================
         public async Task<ContractRes> SoftDeleteContractAsync(int id)
         {
             var contract = await _contractRepository.GetByIdAsync(id);
+
             if (contract == null)
                 throw new NotFoundException("Contract not found");
+
+            if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
+                throw new BadRequestException("Cannot delete active contract");
+
             contract.Status = false;
-            _contractRepository.SoftDelete(contract);
+
             await _contractRepository.SaveAsync();
+
             return _contractMapping.ToContractRes(contract);
         }
 
+        // ================= UPDATE =================
         public async Task<ContractRes> UpdateContractAsync(int id, ContractCreateReq req)
         {
-            var contract = _context.Contracts
-                .Include(c => c.Employee)
-                .FirstOrDefault(c => c.Id == id);
+            var contract = await _context.Contracts
+                .FirstOrDefaultAsync(c => c.Id == id);
+
             if (contract == null)
                 throw new NotFoundException("Contract not found");
+
+            if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
+                throw new BadRequestException("Cannot update active contract");
+
+            if (req.EndDate < req.StartDate)
+                throw new BadRequestException("EndDate must be after StartDate");
+
+            var exists = await _context.Contracts
+                .AnyAsync(c => c.ContractNumber == req.ContractNumber && c.Id != id);
+
+            if (exists)
+                throw new BadRequestException("Contract number already exists");
+
+            // check overlap
+            var overlap = await _context.Contracts
+                .Where(c => c.EmployeeId == contract.EmployeeId && c.Id != id)
+                .AnyAsync(c =>
+                    req.StartDate <= c.EndDate &&
+                    req.EndDate >= c.StartDate
+                );
+
+            if (overlap)
+                throw new BadRequestException("Contract time overlaps existing contract");
+
             contract.ContractNumber = req.ContractNumber;
             contract.ContractType = (Models.Enum.ContractType)req.ContractType;
             contract.StartDate = req.StartDate;
@@ -197,21 +280,37 @@ namespace AttendanceManagementApp.Services.Impl
             contract.OverTimeRate = req.OverTimeRate;
             contract.SignedDate = req.SignedDate;
 
-            _contractRepository.Update(contract);
             await _contractRepository.SaveAsync();
 
             return _contractMapping.ToContractRes(contract);
         }
 
+        // ================= UPDATE STATUS =================
         public async Task<ContractRes> UpdateContractStatusAsync(int id, int contractStatus)
         {
-            var contract = _contractRepository.GetByIdAsync(id).Result;
+            var contract = await _contractRepository.GetByIdAsync(id);
+
             if (contract == null)
                 throw new NotFoundException("Contract not found");
+
             var status = (Models.Enum.ContractStatus)contractStatus;
+
+            if (status == Models.Enum.ContractStatus.ACTIVE)
+            {
+                var currentActive = await _context.Contracts
+                    .FirstOrDefaultAsync(c => c.EmployeeId == contract.EmployeeId &&
+                        c.ContractStatus == Models.Enum.ContractStatus.ACTIVE);
+
+                if (currentActive != null && currentActive.Id != contract.Id)
+                {
+                    currentActive.ContractStatus = Models.Enum.ContractStatus.EXPIRED;
+                }
+            }
+
             contract.ContractStatus = status;
-            _contractRepository.Update(contract);
+
             await _contractRepository.SaveAsync();
+
             return _contractMapping.ToContractRes(contract);
         }
     }

@@ -35,7 +35,7 @@ namespace AttendanceManagementApp.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] AttendanceFilterReq filter, [FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] AttendanceFilterReq filter, [FromQuery] PaginationQuery query)
         {
             var attendances = await _attendanceService.GetAttendancesAsync(filter, query);
             return Ok(new ApiResponse<PagedResult<AttendanceRes>>(attendances));

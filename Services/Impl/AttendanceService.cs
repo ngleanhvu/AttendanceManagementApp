@@ -198,7 +198,7 @@ namespace AttendanceManagementApp.Services.Impl
                         totalWorkingDays++;
                     }
 
-                    if (item.AttendanceStatus == AttendanceStatus.LATE.ToString())
+                    if (item.AttendanceStatus ==(int) AttendanceStatus.LATE)
                     {
                         totalCheckInLate++;
                     }
