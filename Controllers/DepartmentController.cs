@@ -18,8 +18,7 @@ namespace AttendanceManagementApp.Controllers
         {
             _departmentService = departmentService;
         }
-
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] DepartmentCreateReq req)
         {
@@ -44,7 +43,7 @@ namespace AttendanceManagementApp.Controllers
             return Ok(new ApiResponse<string>("Department deleted successfully"));
         }
 
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        // [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {

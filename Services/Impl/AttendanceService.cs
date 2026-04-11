@@ -48,15 +48,27 @@ namespace AttendanceManagementApp.Services.Impl
                 throw new BadRequestException("Too early to check in");
 
             // Rule: weekend
-            if (today.DayOfWeek == DayOfWeek.Saturday || today.DayOfWeek == DayOfWeek.Sunday)
-                throw new BadRequestException("Cannot check in on weekend");
+            // if (today.DayOfWeek == DayOfWeek.Saturday || today.DayOfWeek == DayOfWeek.Sunday)
+            //     throw new BadRequestException("Cannot check in on weekend");
 
-            // Rule: đã check-in
-            var existAttendance = await _appDbContext.Attendances
-                .AnyAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
+            // 🔥 Lấy attendance hôm nay (nếu có)
+            var attendance = await _appDbContext.Attendances
+                .FirstOrDefaultAsync(x => x.Employee.Id == req.EmployeeId && x.WorkDate == today);
 
-            if (existAttendance)
-                throw new BadRequestException("Employee already checked in today");
+            // 👉 Nếu đã tồn tại => xử lý CHECK-OUT
+            if (attendance != null)
+            {
+                if (attendance.CheckOut != null)
+                    throw new BadRequestException("Employee already checked out");
+
+                attendance.CheckOut = now;
+
+                await _attendanceRepository.SaveAsync();
+
+                return _attendanceMapping.ToAttendanceRes(attendance);
+            }
+
+            // ===== CHECK-IN LOGIC =====
 
             // Rule: leave request
             var res = await _leaveRequestService.GetLeaveRequestsAsync(
@@ -86,7 +98,7 @@ namespace AttendanceManagementApp.Services.Impl
             var standardTime = new TimeSpan(HOUR_CHECK_IN, MINUTE_CHECK_IN, 0);
             bool isLate = now.TimeOfDay > standardTime;
 
-            var attendance = new Attendance
+            var newAttendance = new Attendance
             {
                 WorkDate = today,
                 CheckIn = now,
@@ -94,10 +106,10 @@ namespace AttendanceManagementApp.Services.Impl
                 AttendanceStatus = isLate ? AttendanceStatus.LATE : AttendanceStatus.PRESENT
             };
 
-            await _attendanceRepository.AddAsync(attendance);
+            await _attendanceRepository.AddAsync(newAttendance);
             await _attendanceRepository.SaveAsync();
 
-            return _attendanceMapping.ToAttendanceRes(attendance);
+            return _attendanceMapping.ToAttendanceRes(newAttendance);
         }
 
         public async Task<AttendanceRes> CheckOutAsync(int attendanceId)

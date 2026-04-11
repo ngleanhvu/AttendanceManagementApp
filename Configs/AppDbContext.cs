@@ -21,6 +21,7 @@ namespace AttendanceManagementApp.Configs
         public DbSet<PayrollDetail> PayrollDetails { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<Account> Accounts  { get; set; }
+        public DbSet<EmployeeRecognition>  EmployeeRecognitions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -323,6 +323,37 @@ namespace AttendanceManagementApp.Migrations
                     b.ToTable("EmployeeDetail");
                 });
 
+            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeRecognition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.PrimitiveCollection<string>("FaceEmbedding")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeRecognitions");
+                });
+
             modelBuilder.Entity("AttendanceManagementApp.Models.Holiday", b =>
                 {
                     b.Property<int>("Id")
@@ -731,6 +762,17 @@ namespace AttendanceManagementApp.Migrations
                     b.Navigation("Employee");
 
                     b.Navigation("Position");
+                });
+
+            modelBuilder.Entity("AttendanceManagementApp.Models.EmployeeRecognition", b =>
+                {
+                    b.HasOne("AttendanceManagementApp.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("AttendanceManagementApp.Models.LeaveRequest", b =>

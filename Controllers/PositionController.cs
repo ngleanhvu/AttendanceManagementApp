@@ -27,8 +27,7 @@ namespace AttendanceManagementApp.Controllers
             var position = await _positionService.CreatePositionAsync(positionCreateReq);
             return Ok(new ApiResponse<PositionRes>(position));
         }
-
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
         {

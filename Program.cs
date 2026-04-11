@@ -53,6 +53,7 @@ builder.Services.AddScoped<IPayrollService, PayrollService>();
 builder.Services.AddScoped<IOvertimeService, OvertimeService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IEmployeeRecognitionService, EmployeeRecognitionService> ();
 
 // Cloudinary
 builder.Services.Configure<CloudinaryConfig>(
@@ -150,5 +151,11 @@ app.UseAuthentication();  // xác thực JWT
 app.UseAuthorization();   // phân quyền
 
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.Run();
