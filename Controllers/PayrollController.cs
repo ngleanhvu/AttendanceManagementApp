@@ -20,16 +20,16 @@ namespace AttendanceManagementApp.Controllers
         }
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
-        [HttpPatch("/approve")]
-        public async Task<IActionResult> Approve(PayrollCalculateReq req)
+        [HttpPatch("approve")]
+        public async Task<IActionResult> Approve([FromBody] PayrollCalculateReq req)
         {
-             await _payrollService.ApprovePayrollAsync(req);
+            await _payrollService.ApprovePayrollAsync(req);
             return Ok(new ApiResponse<string>("Approve successfully"));
         }
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromBody] PayrollFilterReq req, [FromQuery] PaginationQuery query)
+        public async Task<IActionResult> GetAll([FromQuery] PayrollFilterReq req, [FromQuery] PaginationQuery query)
         {
             var res = await _payrollService.GetPayrollsAsync(query, req);
             return Ok(new ApiResponse<PagedResult<PayrollRes>>(res));

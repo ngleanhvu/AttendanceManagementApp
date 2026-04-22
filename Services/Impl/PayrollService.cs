@@ -182,9 +182,14 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 pageable = pageable.Where(x => x.Year == filter.Year);
             }
-            pageable = pageable.Where(x => x.Employee.Fullname.Equals(filter.Keyword) 
-            || x.Employee.Code.Equals(filter.Keyword) 
-            || x.Employee.Email.Equals(filter.Keyword));
+
+            if (filter.Keyword != null)
+            {
+                pageable = pageable.Where(x => x.Employee.Fullname.Contains(filter.Keyword) 
+                                               || x.Employee.Code.Contains(filter.Keyword) 
+                                               || x.Employee.Email.Contains(filter.Keyword));
+            }
+            
             if (filter.Status.HasValue)
             {
                 pageable = pageable.Where(x => (int)x.PayrollStatus == filter.Status);
@@ -211,11 +216,14 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task ApprovePayrollAsync(PayrollCalculateReq req)
         {
             var res = await _appDbContext.Payrolls
+                .Where(x => x.Month == req.Month && x.Year == req.Year)
                 .ToListAsync();
-            foreach (var item in res) {
+
+            foreach (var item in res)
+            {
                 item.PayrollStatus = PayrollStatus.APPROVED;
             }
-            await _appDbContext.AddRangeAsync(res);
+
             await _appDbContext.SaveChangesAsync();
         }
 

@@ -7,7 +7,6 @@ using AttendanceManagementApp.Models;
 using AttendanceManagementApp.Repositories;
 using AttendanceManagementApp.Services.Interface;
 using AttendanceManagementApp.Utils;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AttendanceManagementApp.Services.Impl
