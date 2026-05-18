@@ -10,5 +10,6 @@ namespace AttendanceManagementApp.Services.Interface
         Task ApprovePayrollAsync(PayrollCalculateReq req);
         Task<PagedResult<PayrollRes>> GetPayrollsAsync(PaginationQuery query, PayrollFilterReq filter);
         Task<FullPayrollDetailRes> GetPayrollDetailAsync(int id);
+        Task SoftDeletePayrollAsync(int id);
     }
 }

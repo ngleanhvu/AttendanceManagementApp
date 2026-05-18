@@ -138,11 +138,12 @@ namespace AttendanceManagementApp.Services.Impl
         }
 
         // ================= GET ACTIVE =================
-        public async Task<Contract> GetContractActiveByEmployeeIdAsync(int employeeId)
+        public async Task<Contract?> GetContractActiveByEmployeeIdAsync(int employeeId)
         {
             return await _context.Contracts
-                .FirstOrDefaultAsync(c => c.EmployeeId == employeeId &&
-                    c.ContractStatus == ContractStatus.ACTIVE);
+                .Where(c => c.EmployeeId == employeeId 
+                            && c.ContractStatus == ContractStatus.ACTIVE)
+                .FirstOrDefaultAsync();
         }
 
         // ================= GET ONE =================

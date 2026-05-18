@@ -134,7 +134,7 @@ namespace AttendanceManagementApp.Services.Impl
 
             if (req.AttendanceStatus.HasValue)
             {
-                pageable = pageable.Where(x => x.Equals(req.AttendanceStatus.Value));
+                pageable = pageable.Where(x => x.AttendanceStatus.Equals((AttendanceStatus)req.AttendanceStatus.Value));
             }
 
             if (req.FromDate.HasValue)
@@ -173,81 +173,94 @@ namespace AttendanceManagementApp.Services.Impl
         }
 
         public async Task<AttendanceWorkloadRes> GetAttendanceWorkloadAsync(int employeeId, int month, int year)
+{
+    double totalWorkingDays = 0;
+    double overtimeWorkingHours = 0;
+    int totalCheckInLate = 0;
+
+    var filter = new AttendanceFilterReq
+    {
+        EmployeeId = employeeId,
+        Month = month,
+        Year = year
+    };
+
+    var query = new PaginationQuery { PageSize = 1000 }; // lấy hết
+    var res = await GetAttendancesAsync(filter, query);
+
+    if (res?.Items == null || !res.Items.Any())
+    {
+        return new AttendanceWorkloadRes();
+    }
+
+    foreach (var item in res.Items)
+    {
+        // ❌ Không đủ dữ liệu → bỏ
+        if (!item.CheckIn.HasValue || !item.CheckOut.HasValue)
+            continue;
+
+        var checkIn = item.CheckIn.Value;
+        var checkOut = item.CheckOut.Value;
+
+        var workedHours = (checkOut - checkIn).TotalHours;
+
+        // =========================
+        // ✅ 1. TÍNH NGÀY CÔNG
+        // =========================
+        if (workedHours >= 7)
         {
-                int totalWorkingDays = 0;
-                double overtimeWorkingHours = 0;
-                int totalCheckInLate = 0;
-
-                var filter = new AttendanceFilterReq
-                {
-                    EmployeeId = employeeId,
-                    Month = month,
-                    Year = year
-                };
-
-                var query = new PaginationQuery
-                {
-                    PageSize = 32
-                };
-
-                var res = await GetAttendancesAsync(filter, query);
-
-                if (res?.Items == null || !res.Items.Any()) // Guard null/empty
-                {
-                    return new AttendanceWorkloadRes
-                    {
-                        TotalWorkingDays = 0,
-                        TotalCheckInLates = 0,
-                        OvertimeWorkingHours = 0
-                    };
-                }
-
-                foreach (var item in res.Items)
-                {
-                    if (item.CheckIn.HasValue)
-                    {
-                        totalWorkingDays++;
-                    }
-
-                    if (item.AttendanceStatus ==(int) AttendanceStatus.LATE)
-                    {
-                        totalCheckInLate++;
-                    }
-
-                    var standardCheckOutTime = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
-
-                    var overtime = await _overtimeSerivce
-                        .GetOverTimeByEmployeeIdAndWorkDateAsync(employeeId, item.WorkDate);
-
-                    if (overtime != null
-                        && overtime.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED
-                        && item.CheckOut.HasValue)
-                    {
-                        var checkOutTime = item.CheckOut.Value.TimeOfDay;
-
-                        // Convert TimeOnly → TimeSpan
-                        var otFrom = overtime.From.ToTimeSpan();
-                        var otTo = overtime.To.ToTimeSpan();
-
-                        // Lấy thời điểm bắt đầu OT thực tế (max giữa checkout chuẩn và OT from)
-                        var start = checkOutTime > otFrom ? otFrom : standardCheckOutTime;
-
-                        // Lấy thời điểm kết thúc OT (không vượt quá OT To)
-                        var end = checkOutTime < otTo ? checkOutTime : otTo;
-
-                        if (end > start)
-                        {
-                            overtimeWorkingHours += (end - start).TotalHours;
-                        }
-                    }
-                }
-
-                return new AttendanceWorkloadRes
-                {
-                    TotalWorkingDays = totalWorkingDays,
-                    TotalCheckInLates = totalCheckInLate,
-                    OvertimeWorkingHours = (float)Math.Round(overtimeWorkingHours, 2)
-                };
+            totalWorkingDays += 1;
         }
+        else if (workedHours >= 3)
+        {
+            totalWorkingDays += 0.5;
+        }
+        // <4h => không tính công
+
+        // =========================
+        // ✅ 2. ĐI TRỄ
+        // =========================
+        if (item.AttendanceStatus == (int)AttendanceStatus.LATE && workedHours >= 3)
+        {
+            totalCheckInLate++;
+        }
+
+        // =========================
+        // ✅ 3. OVERTIME (chuẩn hơn)
+        // =========================
+        var overtime = await _overtimeSerivce
+            .GetOverTimeByEmployeeIdAndWorkDateAsync(employeeId, item.WorkDate);
+
+        if (overtime != null &&
+            overtime.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED)
+        {
+            var otFrom = overtime.From.ToTimeSpan();
+            var otTo = overtime.To.ToTimeSpan();
+
+            var actualCheckOut = checkOut.TimeOfDay;
+
+            // OT bắt đầu sau giờ làm chuẩn (17h30 chẳng hạn)
+            var standardEnd = new TimeSpan(HOUR_CHECK_OUT, MINUTE_CHECK_OUT, 0);
+
+            // Start = max(standardEnd, OT From)
+            var start = otFrom > standardEnd ? otFrom : standardEnd;
+
+            // End = min(CheckOut, OT To)
+            var end = actualCheckOut < otTo ? actualCheckOut : otTo;
+
+            if (end > start)
+            {
+                overtimeWorkingHours += (end - start).TotalHours;
+            }
+        }
+    }
+
+    return new AttendanceWorkloadRes
+    {
+        TotalWorkingDays = (int)Math.Round(totalWorkingDays, 2),
+        TotalCheckInLates = totalCheckInLate,
+        OvertimeWorkingHours = (float) Math.Round(overtimeWorkingHours, 2)
+    };
+}
     }   
     }

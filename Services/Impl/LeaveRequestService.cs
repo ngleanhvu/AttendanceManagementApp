@@ -93,7 +93,6 @@ namespace AttendanceManagementApp.Services.Impl
                 throw new BadRequestException("Reason is required");
 
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
-            var leaveType = await _leaveTypeService.GetLeaveTypeByIdAsync(req.LeaveTypeId);
 
             // 2. Calculate total days
             decimal totalDays = (decimal)(req.ToDate.Date - req.FromDate.Date).TotalDays + 1;
@@ -150,7 +149,6 @@ namespace AttendanceManagementApp.Services.Impl
                 LeaveStatus = LeaveStatus.Pending,
                 EmployeeId = employee.Id,
                 Reason = req.Reason.Trim(),
-                LeaveRequestType = (LeaveRequestType)req.LeaveRequestTypeId
             };
 
             await _leaveRequestRepository.AddAsync(leaveRequest);

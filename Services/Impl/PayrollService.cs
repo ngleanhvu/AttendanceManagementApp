@@ -59,7 +59,7 @@ namespace AttendanceManagementApp.Services.Impl
                     if (existPayroll)
                         continue; // Skip, idempotent
 
-                    // 2️⃣ Tính payroll chi tiết
+                    // Tính payroll chi tiết
                     var (payroll, details) = await CalculatePayrollForEmployeeAsync(employee.Id, req);
 
                     payrolls.Add(payroll);
@@ -171,7 +171,8 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task<PagedResult<PayrollRes>> GetPayrollsAsync(PaginationQuery query, PayrollFilterReq filter)
         {
             var pageable = _appDbContext.Payrolls
-                .Include(x => x.Employee)
+                .Include(x => x.Employee )
+                .Where(x => x.Status == true)
                 .AsNoTracking();
 
             if (filter.Month.HasValue)
@@ -238,6 +239,17 @@ namespace AttendanceManagementApp.Services.Impl
                 throw new NotFoundException("Payroll not found");
             }
             return _payrollMapping.ToFullPayrollDetailRes(res);
+        }
+
+        public async Task SoftDeletePayrollAsync(int id)
+        {
+            var payroll = await _appDbContext.Payrolls
+                .Where(x => x.Id == id)
+                .FirstAsync();
+            if (payroll == null)
+                throw new NotFoundException("Payroll not found");
+            payroll.Status = false;
+            await _repository.SaveAsync();
         }
     }
 }

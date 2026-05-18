@@ -9,5 +9,6 @@
         public string Reason { get; set; }
         public int IsApproved { get; set; }
         public EmployeeRes Employee { get; set; }
+        public int OvertimeStatus { get; set; }
     }
 }

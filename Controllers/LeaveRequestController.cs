@@ -42,8 +42,7 @@ namespace AttendanceManagementApp.Controllers
             var res = await _leaveRequestService.SoftDeleteLeaveRequestAsync(id);
             return Ok(new ApiResponse<LeaveRequestRes>(res));
         }
-
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] LeaveRequestFilterReq filter, [FromQuery] PaginationQuery query)
         {

@@ -34,8 +34,7 @@ namespace AttendanceManagementApp.Controllers
             var res = await _overtimeService.UpdateOverTimeAsync(id, req);
             return Ok(new ApiResponse<OvertimeRes>(res));
         }
-
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        
         [HttpGet]
         public async Task<IActionResult> GetAll([FromQuery] OvertimeFilterReq filter, [FromQuery] PaginationQuery query)
         {

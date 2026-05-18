@@ -79,9 +79,7 @@ namespace AttendanceManagementApp.Services.Impl
                 var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
                     x.Employee.Id == overtime.Employee.Id &&
                     x.WorkDate == overtime.WorkDate);
-
-                if (!hasAttendance)
-                    throw new BadRequestException("Must check-in before approving overtime");
+                
 
                 var currentHours = (overtime.To - overtime.From).TotalHours;
 
@@ -160,9 +158,6 @@ namespace AttendanceManagementApp.Services.Impl
             var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
                 x.Employee.Id == req.EmployeeId &&
                 x.WorkDate == req.WorkDate);
-
-            if (!hasAttendance)
-                throw new BadRequestException("Must check-in before registering overtime");
 
             // 5. Tạo OT
             var overtime = new OverTime

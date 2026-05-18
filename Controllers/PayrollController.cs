@@ -50,5 +50,13 @@ namespace AttendanceManagementApp.Controllers
             var res = await _payrollService.GetPayrollDetailAsync(id);
             return Ok(new ApiResponse<FullPayrollDetailRes>(res));
         }
+
+        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _payrollService.SoftDeletePayrollAsync(id);
+            return Ok(new ApiResponse<string>("Soft delete payroll successfully"));
+        }
     }
 }

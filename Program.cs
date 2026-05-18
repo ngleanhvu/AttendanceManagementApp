@@ -54,6 +54,7 @@ builder.Services.AddScoped<IOvertimeService, OvertimeService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IEmployeeRecognitionService, EmployeeRecognitionService> ();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 // Cloudinary
 builder.Services.Configure<CloudinaryConfig>(

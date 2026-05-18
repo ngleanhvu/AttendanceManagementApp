@@ -73,7 +73,7 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 Username = req.Email,
                 PasswordHash = _passwordService.Hash(req.IdentityNumber),
-                IsActive = false,
+                IsActive = true,
                 Position = position,
                 Employee = employee
             };
