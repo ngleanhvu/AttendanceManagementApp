@@ -35,10 +35,10 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstOrDefaultAsync(c => c.Id == contractId && c.EmployeeId == employeeId);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
+                throw new NotFoundException("Hợp đồng không tồn tại");
 
             if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
-                throw new BadRequestException("Contract is already active");
+                throw new BadRequestException("Hợp đồng đã có hiệu lực");
 
             var currentActive = await _context.Contracts
                 .FirstOrDefaultAsync(c => c.EmployeeId == employeeId &&
@@ -91,24 +91,24 @@ namespace AttendanceManagementApp.Services.Impl
         {
             // validate
             if (req.EndDate < req.StartDate)
-                throw new BadRequestException("EndDate must be after StartDate");
+                throw new BadRequestException("Ngày kết thúc sớm hơn ngày bắt đầu");
 
             var exists = await _context.Contracts
                 .AnyAsync(c => c.ContractNumber == req.ContractNumber);
 
             if (exists)
-                throw new BadRequestException("Contract number already exists");
+                throw new BadRequestException("Số hợp đồng đã tồn tại");
 
             // check overlap
             var overlap = await _context.Contracts
                 .Where(c => c.EmployeeId == req.EmployeeId)
                 .AnyAsync(c =>
                     req.StartDate <= c.EndDate &&
-                    req.EndDate >= c.StartDate
+                    req.EndDate >= c.StartDate && c.ContractStatus != ContractStatus.NOT_ACTIVE
                 );
 
             if (overlap)
-                throw new BadRequestException("Contract time overlaps existing contract");
+                throw new BadRequestException("Thời gian hợp đồng bị trùng lặp với hợp đồng hiện có");
 
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
 
@@ -155,7 +155,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
+                throw new NotFoundException("Hợp dồng không tồn tại");
 
             return _contractMapping.ToContractRes(contract);
         }
@@ -224,10 +224,10 @@ namespace AttendanceManagementApp.Services.Impl
             var contract = await _contractRepository.GetByIdAsync(id);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
+                throw new NotFoundException("Hợp dồng không tồn tại");
 
             if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
-                throw new BadRequestException("Cannot delete active contract");
+                throw new BadRequestException("Không thể xóa hợp đồng đang có hiệu lực");
 
             contract.Status = false;
 
@@ -243,19 +243,19 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
+                throw new NotFoundException("Hợp đồng không tồn tại");
 
             if (contract.ContractStatus == Models.Enum.ContractStatus.ACTIVE)
-                throw new BadRequestException("Cannot update active contract");
+                throw new BadRequestException("Không thể cập nhật hợp đồng đang có hiệu lực");
 
             if (req.EndDate < req.StartDate)
-                throw new BadRequestException("EndDate must be after StartDate");
+                throw new BadRequestException("Ngày kết thúc sớm hơn ngày bắt đầu");
 
             var exists = await _context.Contracts
                 .AnyAsync(c => c.ContractNumber == req.ContractNumber && c.Id != id);
 
             if (exists)
-                throw new BadRequestException("Contract number already exists");
+                throw new BadRequestException("Số hợp đồng đã tồn tại");
 
             // check overlap
             var overlap = await _context.Contracts
@@ -266,7 +266,7 @@ namespace AttendanceManagementApp.Services.Impl
                 );
 
             if (overlap)
-                throw new BadRequestException("Contract time overlaps existing contract");
+                throw new BadRequestException("Thời gian hợp đồng bị trùng lặp với hợp đồng hiện có.");
 
             contract.ContractNumber = req.ContractNumber;
             contract.ContractType = (Models.Enum.ContractType)req.ContractType;
@@ -292,7 +292,7 @@ namespace AttendanceManagementApp.Services.Impl
             var contract = await _contractRepository.GetByIdAsync(id);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
+                throw new NotFoundException("Hợp đồng không tồn tại");
 
             var status = (Models.Enum.ContractStatus)contractStatus;
 
@@ -304,7 +304,7 @@ namespace AttendanceManagementApp.Services.Impl
 
                 if (currentActive != null && currentActive.Id != contract.Id)
                 {
-                    currentActive.ContractStatus = Models.Enum.ContractStatus.EXPIRED;
+                    currentActive.ContractStatus = Models.Enum.ContractStatus.NOT_ACTIVE;
                 }
             }
 

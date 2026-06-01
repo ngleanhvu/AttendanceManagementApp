@@ -54,8 +54,8 @@ namespace AttendanceManagementApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> SoftDelete(int id)
         {
-            var res = await _overtimeService.SoftDeleteOverTimeAsync(id);
-            return Ok(new ApiResponse<OvertimeRes>(res));
+            await _overtimeService.SoftDeleteOverTimeAsync(id);
+            return Ok(new ApiResponse<string>(""));
         }
     }
 }

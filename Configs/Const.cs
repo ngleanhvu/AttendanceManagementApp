@@ -2,6 +2,6 @@
 {
     public class Const
     {
-        public const string HR_ROLE_NAME = "HR";
+        public const string HR_ROLE_NAME = "Nhân viên nhân sự";
     }
 }

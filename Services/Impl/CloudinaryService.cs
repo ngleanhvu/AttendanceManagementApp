@@ -25,7 +25,7 @@ namespace AttendanceManagementApp.Services.Impl
         public async Task<string> UploadImageAsync(IFormFile file)
         {
             if (file.Length <= 0)
-                throw new IOException("File is empty");
+                throw new IOException("File bị rỗng");
 
             await using var stream = file.OpenReadStream();
 

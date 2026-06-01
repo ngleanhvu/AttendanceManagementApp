@@ -48,7 +48,7 @@ namespace AttendanceManagementApp.Services.Impl
             var hoilday = await _holidayRepository.GetByIdAsync(id);
             if (hoilday == null)
             {
-                throw new NotFoundException("Holiday not found");
+                throw new NotFoundException("Nghỉ lễ không tồn tại");
             }
             return _holidayMapping.ToHolidayRes(hoilday);
         }
@@ -79,7 +79,7 @@ namespace AttendanceManagementApp.Services.Impl
             var holiday = await _holidayRepository.GetByIdAsync(id);
             if (holiday == null)
             {
-                throw new NotFoundException("Holiday not found");
+                throw new NotFoundException("Nghỉ lễ không tồn tại");
             }
             _holidayRepository.SoftDelete(holiday);
             await _holidayRepository.SaveAsync();
@@ -106,7 +106,7 @@ namespace AttendanceManagementApp.Services.Impl
             var holiday = await _holidayRepository.GetByIdAsync(id);
             if (holiday == null)
             {
-                throw new NotFoundException("Holiday not found");
+                throw new NotFoundException("Nghỉ lễ không tồn tại");
             }
             holiday.Name = req.Name;
             holiday.TotalDay = req.TotalDay;

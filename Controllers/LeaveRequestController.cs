@@ -39,8 +39,8 @@ namespace AttendanceManagementApp.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var res = await _leaveRequestService.SoftDeleteLeaveRequestAsync(id);
-            return Ok(new ApiResponse<LeaveRequestRes>(res));
+            await _leaveRequestService.SoftDeleteLeaveRequestAsync(id);
+            return Ok(new ApiResponse<string>(""));
         }
         
         [HttpGet]

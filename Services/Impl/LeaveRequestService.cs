@@ -22,6 +22,7 @@ namespace AttendanceManagementApp.Services.Impl
         private readonly ILeaveTypeService _leaveTypeService;
         private readonly IContractService _contractService;
         private readonly int MAX_LEAVED_DAY = 3;
+        private readonly int MAX_YEAR_DAY = 12;
 
         public LeaveRequestService(IRepository<LeaveRequest> leaveRequestRepository, LeaveRequestMapping leaveRequestMapping, 
             AppDbContext appDbContext, EmployeeMapping employeeMapping, LeaveTypeMapping leaveTypeMapping,
@@ -84,13 +85,13 @@ namespace AttendanceManagementApp.Services.Impl
 
             // 1. Validate basic
             if (req.FromDate > req.ToDate)
-                throw new BadRequestException("From date must be <= To date");
+                throw new BadRequestException("Ngày kết thúc sớm hơn ngày bắt đầu");
 
             if (req.FromDate.Date < now)
-                throw new BadRequestException("Cannot request leave in the past");
+                throw new BadRequestException("Không thể tạo yêu cầu từ quá khứ");
 
             if (string.IsNullOrWhiteSpace(req.Reason))
-                throw new BadRequestException("Reason is required");
+                throw new BadRequestException("Vui lòng nhập lý do");
 
             var employee = await _employeeService.GetEmployeeByIdAsync(req.EmployeeId);
 
@@ -104,7 +105,7 @@ namespace AttendanceManagementApp.Services.Impl
             if (isPartial)
             {
                 if (req.FromDate.Date != req.ToDate.Date)
-                    throw new BadRequestException("Partial leave must be within one day");
+                    throw new BadRequestException("Phép nửa ngày phải diễn ra trong cùng 1 ngày");
 
                 totalDays = 0.5m;
             }
@@ -114,29 +115,20 @@ namespace AttendanceManagementApp.Services.Impl
                 x.EmployeeId == req.EmployeeId &&
                 x.LeaveStatus != LeaveStatus.Rejected &&
                 req.FromDate <= x.ToDate &&
-                req.ToDate >= x.FromDate);
+                req.ToDate >= x.FromDate && x.Status == true);
 
             if (isOverlap)
-                throw new BadRequestException("Leave request overlaps with existing request");
-
-            // 5. Check attendance conflict
-            var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
-                x.Employee.Id == req.EmployeeId &&
-                x.WorkDate >= DateOnly.FromDateTime(req.FromDate) &&
-                x.WorkDate <= DateOnly.FromDateTime(req.ToDate));
-
-            if (hasAttendance)
-                throw new BadRequestException("Cannot request leave for days already checked-in");
-
+                throw new BadRequestException("Yêu cầu nghỉ phép bị trùng với một yêu cầu nghỉ phép đã tồn tại.");
+            
             // 6. Check request in advance (ví dụ: ít nhất 1 ngày)
             if ((req.FromDate.Date - now).TotalDays < 1)
-                throw new BadRequestException("Leave request must be submitted at least 1 day in advance");
+                throw new BadRequestException("Vui lòng gửi yêu cầu trước 1 ngày");
 
             // 7. Optional: không cho xin nghỉ cuối tuần
             if (req.FromDate.DayOfWeek == DayOfWeek.Saturday ||
                 req.FromDate.DayOfWeek == DayOfWeek.Sunday)
             {
-                throw new BadRequestException("Cannot request leave on weekend");
+                throw new BadRequestException("Không thể tạo yêu cầu nghỉ phép vào thứ 7 chủ nhật");
             }
 
             // 8. Create entity
@@ -222,17 +214,16 @@ namespace AttendanceManagementApp.Services.Impl
             };
         }
 
-        public async Task<LeaveRequestRes> SoftDeleteLeaveRequestAsync(int id)
+        public async Task SoftDeleteLeaveRequestAsync(int id)
         {
             var leaveRequest = await _leaveRequestRepository.GetByIdAsync(id);
             if (leaveRequest == null)
             {
-                throw new NotFoundException("Leave request not found");
+                throw new NotFoundException("Phép nghỉ không tồn tại");
             }
             leaveRequest.Status = false;
             _leaveRequestRepository.SoftDelete(leaveRequest);
             await _leaveRequestRepository.SaveAsync();
-            return  _leaveRequestMapping.ToLeaveRequestRes(leaveRequest, 0, 0);
         }
 
         public async Task<LeaveRequestRes> UpdateLeaveStatusAsync(int id, LeaveRequestUpdateStatusReq req)
@@ -242,7 +233,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (leaveRequest == null)
-                throw new NotFoundException("Leave request not found");
+                throw new NotFoundException("Phép nghỉ không tồn tại");
 
             if (leaveRequest.LeaveStatus != LeaveStatus.Pending)
                 throw new BadRequestException("Only pending request can be updated");
@@ -251,7 +242,7 @@ namespace AttendanceManagementApp.Services.Impl
             {
                 // Check past
                 if (leaveRequest.FromDate.Date < DateTime.UtcNow.Date)
-                    throw new BadRequestException("Cannot approve past leave");
+                    throw new BadRequestException("Không thể duyệt yêu cầu nghỉ trong quá khứ");
 
                 // Check overlap
                 var isOverlap = await _appDbContext.LeaveRequests.AnyAsync(x =>
@@ -259,10 +250,10 @@ namespace AttendanceManagementApp.Services.Impl
                     x.Id != leaveRequest.Id &&
                     x.LeaveStatus == LeaveStatus.Approved &&
                     leaveRequest.FromDate <= x.ToDate &&
-                    leaveRequest.ToDate >= x.FromDate);
+                    leaveRequest.ToDate >= x.FromDate && x.Status == true);
 
                 if (isOverlap)
-                    throw new BadRequestException("Overlap with approved leave");
+                    throw new BadRequestException("Yêu cầu nghỉ phép bị trùng với một yêu cầu nghỉ phép đã tồn tại.");
 
                 // Check quota
                 var totalMonth = await CalculateTotalLeavingAsync(
@@ -271,14 +262,14 @@ namespace AttendanceManagementApp.Services.Impl
                     leaveRequest.FromDate.Year);
 
                 if (totalMonth + leaveRequest.TotalDays > MAX_LEAVED_DAY)
-                    throw new BadRequestException("Monthly limit exceeded");
+                    throw new BadRequestException("Số ngày nghỉ phép trong tháng vượt mức cho phép");
 
                 var totalYear = await CalculateTotalLeavedDayAsync(
                     leaveRequest.EmployeeId,
                     leaveRequest.FromDate.Year);
 
-                if (totalYear + leaveRequest.TotalDays > MAX_LEAVED_DAY)
-                    throw new BadRequestException("Yearly limit exceeded");
+                if (totalYear + leaveRequest.TotalDays > MAX_YEAR_DAY)
+                    throw new BadRequestException("Số ngày nghỉ phép trong năm vượt mức cho phép");
 
                 leaveRequest.LeaveStatus = LeaveStatus.Approved;
                 leaveRequest.ApprovedDate = DateTime.UtcNow;
@@ -286,14 +277,14 @@ namespace AttendanceManagementApp.Services.Impl
             else if (req.LeaveStatus == (int)LeaveStatus.Rejected)
             {
                 if (string.IsNullOrEmpty(req.RejectReason))
-                    throw new BadRequestException("Reject reason required");
+                    throw new BadRequestException("Vui lòng nhập lý do");
 
                 leaveRequest.LeaveStatus = LeaveStatus.Rejected;
                 leaveRequest.RejectReason = req.RejectReason;
             }
             else
             {
-                throw new BadRequestException("Invalid status");
+                throw new BadRequestException("Trạng thái không hợp lệ");
             }
 
             _leaveRequestRepository.Update(leaveRequest);

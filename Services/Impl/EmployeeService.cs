@@ -40,14 +40,40 @@ namespace AttendanceManagementApp.Services.Impl
 
         public async Task<EmployeeRes> CreateEmployeeAsync(EmployeeCreateReq req)
         {
-            // 1. Validate input
+            // 1. Validate department / position
             var department = await _departmentService.GetDepartmentAsync(req.DepartmentId);
             var position = await _positionService.GetPositionAsync(req.PositionId);
+
             if (req.Thumbnail == null || req.Thumbnail.Length == 0)
-                throw new BadHttpRequestException("Thumbnail is required");
-            // 2. Upload image (ngoài transaction)
+                throw new BadRequestException("Vui lòng upload ảnh cá nhân");
+
+            // 2. Check duplicate email
+            var isEmailExists = await _context.Employees
+                .AnyAsync(e => e.Email == req.Email);
+
+            if (isEmailExists)
+                throw new BadRequestException("Email đã được sử dụng");
+
+            // 3. Check duplicate phone
+            var isPhoneExists = await _context.Employees
+                .Include(x => x.EmployeeDetail)
+                .AnyAsync(e => e.EmployeeDetail.Phone == req.Phone);
+
+            if (isPhoneExists)
+                throw new BadRequestException("Số điện thoại đã được sử dụng");
+
+            // 4. Check duplicate identity number
+            var isIdentityNumberExists = await _context.Employees
+                .Include(x => x.EmployeeDetail)
+                .AnyAsync(e => e.EmployeeDetail.IdentityNumber == req.IdentityNumber);
+
+            if (isIdentityNumberExists)
+                throw new BadRequestException("Số CCCD/CMND đã được sử dụng");
+
+            // 5. Upload image ngoài transaction
             var thumbnailUrl = await _cloudinaryService.UploadImageAsync(req.Thumbnail);
-            // 3. Create entities
+
+            // 6. Create employee
             var employee = new Employee
             {
                 Code = $"EM{req.IdentityNumber}",
@@ -69,6 +95,7 @@ namespace AttendanceManagementApp.Services.Impl
                 Position = position,
                 Employee = employee
             };
+
             var account = new Account
             {
                 Username = req.Email,
@@ -77,8 +104,10 @@ namespace AttendanceManagementApp.Services.Impl
                 Position = position,
                 Employee = employee
             };
-            // 4. Transaction
+
+            // 7. Transaction
             using var transaction = await _context.Database.BeginTransactionAsync();
+
             try
             {
                 await _repo.AddAsync(employee);
@@ -94,7 +123,8 @@ namespace AttendanceManagementApp.Services.Impl
                 await transaction.RollbackAsync();
                 throw;
             }
-            // 5. Return response
+
+            // 8. Return response
             return _employeeMapping.ToEmployeeRes(employee);
         }
 
@@ -115,7 +145,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .ToListAsync();
 
             var itemsRes = items.Select(x => _employeeMapping.ToEmployeeRes(x)).ToList();
-            
+
             return new PagedResult<EmployeeRes>
             {
                 Total = total,
@@ -129,13 +159,13 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var employee = await _context.Employees
                 .Include(x => x.EmployeeDetail)
-                    .ThenInclude(x => x.Department)
+                .ThenInclude(x => x.Department)
                 .Include(x => x.EmployeeDetail)
-                    .ThenInclude(x => x.Position)
+                .ThenInclude(x => x.Position)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
             if (employee == null)
-                throw new NotFoundException("Employee not found");
+                throw new NotFoundException("Nhân viên không tồn tại");
             return _employeeMapping.ToEmployeeDetailRes(employee);
         }
 
@@ -167,7 +197,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .Include(x => x.EmployeeDetail)
                 .FirstOrDefaultAsync(x => x.Id == id);
             if (employee == null)
-                throw new NotFoundException("Employee not found");
+                throw new NotFoundException("Nhân viên không tồn tại");
             // 1. Validate input
             var department = await _departmentService.GetDepartmentAsync(req.DepartmentId);
             var position = await _positionService.GetPositionAsync(req.PositionId);
@@ -176,7 +206,8 @@ namespace AttendanceManagementApp.Services.Impl
             if (req.Thumbnail != null && req.Thumbnail.Length != 0)
             {
                 thumbnailUrl = await _cloudinaryService.UploadImageAsync(req.Thumbnail);
-            } 
+            }
+
             // 3. Update entities
             employee.Fullname = req.Fullname;
             employee.Gender = req.Gender;
@@ -206,6 +237,7 @@ namespace AttendanceManagementApp.Services.Impl
                 await transaction.RollbackAsync();
                 throw;
             }
+
             // 5. Return response
             return _employeeMapping.ToEmployeeDetailRes(employee);
         }
@@ -214,14 +246,14 @@ namespace AttendanceManagementApp.Services.Impl
         {
             var employee = _context.Employees.FirstOrDefault(x => x.Id == id);
             if (employee == null)
-                throw new NotFoundException("Employee not found");
+                throw new NotFoundException("Nhân viên không tồn tại");
             return employee;
         }
 
         public async Task<List<Employee>> GetAllEmployeeAsync()
         {
             var res = await _context.Employees
-                .AsNoTracking() .ToListAsync();
+                .AsNoTracking().ToListAsync();
             return res;
         }
     }

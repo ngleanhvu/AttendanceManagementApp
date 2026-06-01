@@ -41,7 +41,7 @@ namespace AttendanceManagementApp.Services.Impl
             var position = _repo.GetByIdAsync(id).Result;
             if (position == null)
             {
-                throw new NotFoundException("Position not found.");
+                throw new NotFoundException("Chức vụ không tồn tại");
             }
             return position;
         }
@@ -76,7 +76,7 @@ namespace AttendanceManagementApp.Services.Impl
             var position =  _repo.GetByIdAsync(id).Result;
             if (position == null)
             {
-                throw new NotFoundException("Position not found.");
+                throw new NotFoundException("Chức vụ không tồn tại");
             }
             _repo.SoftDelete(position);
             await _repo.SaveAsync();
@@ -88,7 +88,7 @@ namespace AttendanceManagementApp.Services.Impl
             var position = _repo.GetByIdAsync(id).Result;
             if (position == null)
             {
-                throw new NotFoundException("Position not found.");
+                throw new NotFoundException("Chức vụ không tồn tại");
             }
             position.Name = positionCreateReq.Name;
             position.Description = positionCreateReq.description;

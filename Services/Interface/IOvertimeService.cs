@@ -9,7 +9,7 @@ namespace AttendanceManagementApp.Services.Interface
     {
         Task<OvertimeRes> CreateOverTimeAsync(OvertimeCreateReq req);
         Task<OvertimeRes> UpdateOverTimeAsync(int id, OvertimeCreateReq req);
-        Task<OvertimeRes> SoftDeleteOverTimeAsync(int id);
+        Task SoftDeleteOverTimeAsync(int id);
         Task<PagedResult<OvertimeRes>> GetOverTimesAsync(OvertimeFilterReq req, PaginationQuery query);
         Task<OvertimeRes> ApprovedOverTimeAsync(int id, int status);
         Task<bool> ExistOverTimeAsync(int id, DateOnly workDate);

@@ -35,13 +35,13 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (overtime == null)
-                throw new NotFoundException("Overtime not found");
+                throw new NotFoundException("Yêu cầu tăng ca không tồn tại");
 
             if (overtime.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED)
-                throw new BadRequestException("Overtime already approved");
+                throw new BadRequestException("Yêu cầu tăng ca đã được chấp nhận");
 
             if (overtime.OvertimeStatus == Models.Enum.OvertimeStatus.REJECTED)
-                throw new BadRequestException("Overtime already rejected");
+                throw new BadRequestException("Yêu cầu tăng ca đã được từ chối");
 
             var newStatus = (Models.Enum.OvertimeStatus)status;
 
@@ -61,7 +61,7 @@ namespace AttendanceManagementApp.Services.Impl
                 var now = DateTime.Now;
 
                 if (overtime.WorkDate < DateOnly.FromDateTime(now))
-                    throw new BadRequestException("Cannot approve past overtime");
+                    throw new BadRequestException("Không thể chấp nhận yêu cầu trong quá khứ");
 
                 // Check overlap
                 var isOverlap = await _appDbContext.OverTimes.AnyAsync(x =>
@@ -70,10 +70,10 @@ namespace AttendanceManagementApp.Services.Impl
                     x.WorkDate == overtime.WorkDate &&
                     x.OvertimeStatus == Models.Enum.OvertimeStatus.APPROVED &&
                     ((overtime.From >= x.From && overtime.From < x.To) ||
-                     (overtime.To > x.From && overtime.To <= x.To)));
+                     (overtime.To > x.From && overtime.To <= x.To)) && x.Status == true);
 
                 if (isOverlap)
-                    throw new BadRequestException("Overlaps with approved overtime");
+                    throw new BadRequestException("Trung lặp thời gian yêu cầu tăng ca đã tồn tại");
 
                 // Must have attendance
                 var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
@@ -91,7 +91,7 @@ namespace AttendanceManagementApp.Services.Impl
                     .Sum(x => (x.To - x.From).TotalHours);
 
                 if (totalOtHours + currentHours > 4)
-                    throw new BadRequestException("Exceeded daily overtime limit");
+                    throw new BadRequestException("Thời gian tăng ca > 4");
 
                 var totalOtMonth = _appDbContext.OverTimes
                     .Where(x => x.Employee.Id == overtime.Employee.Id &&
@@ -101,9 +101,6 @@ namespace AttendanceManagementApp.Services.Impl
                     .AsEnumerable()
                     .Sum(x => (x.To - x.From).TotalHours);
 
-                if (totalOtMonth + currentHours > 40)
-                    throw new BadRequestException("Exceeded monthly overtime limit");
-
                 overtime.OvertimeStatus = Models.Enum.OvertimeStatus.APPROVED;
                 _repository.Update(overtime);
                 await _repository.SaveAsync();
@@ -111,7 +108,7 @@ namespace AttendanceManagementApp.Services.Impl
                 return _overtimeMapping.ToOverTimeRes(overtime);
             }
 
-            throw new BadRequestException("Invalid status");
+            throw new BadRequestException("Trạng thái không hợp lệ");
         }
 
         public async Task<OvertimeRes> CreateOverTimeAsync(OvertimeCreateReq req)
@@ -123,36 +120,33 @@ namespace AttendanceManagementApp.Services.Impl
 
             // 1. Validate time
             if (req.From >= req.To)
-                throw new BadRequestException("Invalid time range");
+                throw new BadRequestException("Thời gian kết thúc sớm hơn thời gian bắt đầu");
 
             if (req.WorkDate < today)
-                throw new BadRequestException("Cannot register overtime in the past");
+                throw new BadRequestException("Không thể tạo yêu cầu tăng ca trong quá khứ");
 
             var duration = (req.To - req.From).TotalHours;
 
             if (duration < 1)
-                throw new BadRequestException("Minimum overtime is 1 hour");
+                throw new BadRequestException("Thời gian tăng ca < 1");
 
             if (duration > 4)
-                throw new BadRequestException("Max overtime per request is 4 hours");
+                throw new BadRequestException("Thòi gian tối đa cho mỗi buổi tăng ca <= 4");
 
             // 2. Không cho OT trong giờ hành chính
 
             var workStart = new TimeOnly(8, 30);
             var workEnd = new TimeOnly(17, 30);
 
-            if (req.From < workEnd && req.To > workStart)
-                throw new BadRequestException("Overtime must be outside working hours");
-
             // 3. Check overlap (basic)
             var isOverlap = await _appDbContext.OverTimes.AnyAsync(x =>
                 x.Employee.Id == req.EmployeeId &&
                 x.WorkDate == req.WorkDate &&
                 ((req.From >= x.From && req.From < x.To) ||
-                 (req.To > x.From && req.To <= x.To)));
+                 (req.To > x.From && req.To <= x.To)) && x.Status == true);
 
             if (isOverlap)
-                throw new BadRequestException("Overtime overlaps");
+                throw new BadRequestException("Thời gian tăng ca trùng lặp với thòi gian tăng ca trong quá khứ");
 
             // 4. Check attendance (optional - tùy business)
             var hasAttendance = await _appDbContext.Attendances.AnyAsync(x =>
@@ -183,12 +177,17 @@ namespace AttendanceManagementApp.Services.Impl
                             && x.WorkDate == workDate
                             && x.Status == true);
         }
-
-            public async Task<OverTime?> GetOverTimeByEmployeeIdAndWorkDateAsync(int employeeId, DateOnly workDate)
-            {
-                return await _appDbContext.OverTimes
-                    .FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.WorkDate == workDate && x.Status == true);
-            }
+        public async Task<OverTime?> GetOverTimeByEmployeeIdAndWorkDateAsync(
+            int employeeId,
+            DateOnly workDate)
+        {
+            return await _appDbContext.OverTimes
+                .FirstOrDefaultAsync(x =>
+                    x.EmployeeId == employeeId
+                    && x.WorkDate == workDate
+                    && x.Status
+                    && x.OvertimeStatus == OvertimeStatus.APPROVED);
+        }
 
         public async Task<PagedResult<OvertimeRes>> GetOverTimesAsync(OvertimeFilterReq req, PaginationQuery query)
         {
@@ -221,25 +220,24 @@ namespace AttendanceManagementApp.Services.Impl
             };
         }
 
-        public async Task<OvertimeRes> SoftDeleteOverTimeAsync(int id)
+        public async Task SoftDeleteOverTimeAsync(int id)
         {
             var overtime = await _repository.GetByIdAsync(id);
             if (overtime == null)
-                throw new NotFoundException("Overtime not found");
+                throw new NotFoundException("Yêu cầu tăng ca không tồn tại");
             overtime.Status = false;
             _repository.SoftDelete(overtime);
             await _repository.SaveAsync();
-            return _overtimeMapping.ToOverTimeRes(overtime);
         }
 
         public async Task<OvertimeRes> UpdateOverTimeAsync(int id, OvertimeCreateReq req)
         {
             var overtime = await _repository.GetByIdAsync(id);
             if (overtime == null)
-                throw new NotFoundException("Overtime not found");
+                throw new NotFoundException("Yêu cầu tăng ca không tồn tại");
             if (req.From > req.To)
             {
-                throw new BadRequestException("From date > To date");
+                throw new BadRequestException("Ngày kết thúc sớm hơn ngày bắt đầu");
             }
             overtime.WorkDate = req.WorkDate;
             overtime.From = req.From;

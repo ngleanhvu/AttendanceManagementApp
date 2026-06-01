@@ -37,8 +37,8 @@ namespace AttendanceManagementApp.Controllers
         }
 
         [Authorize(Roles = Const.HR_ROLE_NAME)]
-        [HttpPut("{id}/status")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromQuery] int contractStatus)
+        [HttpPut("{id}/status/{contractStatus}")]
+        public async Task<IActionResult> UpdateStatus(int id, int contractStatus)
         {
             var contract = await _contractService.UpdateContractStatusAsync(id, contractStatus);
             return Ok(new ApiResponse<ContractRes>(contract));

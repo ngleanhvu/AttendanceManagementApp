@@ -20,7 +20,7 @@ namespace AttendanceManagementApp.Controllers
             _positionService = positionService;
         }
 
-        [Authorize(Roles = Const.HR_ROLE_NAME)]
+        // [Authorize(Roles = Const.HR_ROLE_NAME)]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] PositionCreateReq positionCreateReq)
         {

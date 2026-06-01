@@ -20,7 +20,7 @@ namespace AttendanceManagementApp.Services.Impl
         private readonly IContractService _contractService;
         private readonly IAttendanceService _attendanceService;
         private readonly ILeaveRequestService _leaveRequestService;
-        private readonly decimal FINE_CHECK_IN_LATE_AMOUNT = 200000;
+        private readonly decimal FINE_CHECK_IN_LATE_AMOUNT = 50000;
         private readonly IHolidayService _holidayService;
 
         public PayrollService(IRepository<Payroll> repository, AppDbContext appDbContext,
@@ -87,11 +87,8 @@ namespace AttendanceManagementApp.Services.Impl
             var contract = await _contractService.GetContractActiveByEmployeeIdAsync(employeeId);
 
             if (contract == null)
-                throw new NotFoundException("Contract not found");
-
-            if (contract.BaseSalary <= 0 || contract.WorkingPerMonth <= 0)
-                throw new BadRequestException("Invalid contract data");
-
+                throw new NotFoundException("Hợp đồng không tồn tại");
+            
             // Lương cơ bản
             var baseSalaryPerDay = contract.BaseSalary / contract.WorkingPerMonth;
             var baseSalaryPerHour = baseSalaryPerDay / 8;
@@ -236,7 +233,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .FirstAsync();
             if (res == null)
             {
-                throw new NotFoundException("Payroll not found");
+                throw new NotFoundException("Phiếu lương không tồn tại");
             }
             return _payrollMapping.ToFullPayrollDetailRes(res);
         }
@@ -247,7 +244,7 @@ namespace AttendanceManagementApp.Services.Impl
                 .Where(x => x.Id == id)
                 .FirstAsync();
             if (payroll == null)
-                throw new NotFoundException("Payroll not found");
+                throw new NotFoundException("Phiếu lương không tồn tại");
             payroll.Status = false;
             await _repository.SaveAsync();
         }

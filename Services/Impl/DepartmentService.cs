@@ -45,7 +45,7 @@ namespace AttendanceManagementApp.Services.Impl
             var department = _repo.GetByIdAsync(id).Result;
             if (department == null)
             {
-                throw new NotFoundException("Department with not found.");
+                throw new NotFoundException("Phòng ban không tồn tại");
             }
             return department;
         }
@@ -81,7 +81,7 @@ namespace AttendanceManagementApp.Services.Impl
             var department = _repo.GetByIdAsync(id).Result;
             if (department == null)
             {
-                throw new NotFoundException("Department with not found.");
+                throw new NotFoundException("Phòng ban không tồn tại");
             }
             _repo.SoftDelete(department);
             await _repo.SaveAsync();
@@ -94,7 +94,7 @@ namespace AttendanceManagementApp.Services.Impl
             var department = _repo.GetByIdAsync(id).Result;
             if (department == null)
             {
-                throw new NotFoundException("Department with not found.");
+                throw new NotFoundException("Phòng ban không tồn tại");
             }
             department.Name = req.Name;
             department.Description = req.Description;
